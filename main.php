@@ -223,8 +223,7 @@ do {
 
                     $SQL->deleteSchedule($arrID);
 
-                    $updateSchedule = fopen("log/server/server::" .
-                        $arrID, "w+");
+                    $updateSchedule = fopen("log/server/server::" . $arrID, "w+");
                     fwrite($updateSchedule, "not_exist");
                     fclose($updateSchedule);
 
@@ -257,8 +256,7 @@ do {
                         fclose($fp);
                     }
 
-                    $updateSchedule = fopen("log/server/server::" .
-                        $arrID, "w+");
+                    $updateSchedule = fopen("log/server/server::" . $arrID, "w+");
                     fwrite($updateSchedule, "work");
                     fclose($updateSchedule);
                 }
@@ -313,10 +311,7 @@ do {
 
                         // 沒有錯誤則表示finish
                         if (count($output) == 0) {
-                            $updateSchedule = fopen(
-                                $logDir .
-                                $fileName,
-                                "w+");
+                            $updateSchedule = fopen($logDir . $fileName, "w+");
                             fwrite($updateSchedule, "finish");
                             fclose($updateSchedule);
 
