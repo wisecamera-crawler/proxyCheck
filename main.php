@@ -130,6 +130,8 @@ do {
             // status is empty or finish
             $arrID = $arrRow['schedule_id'];
             $updFile = "log/server/server::" . $arrID;
+            $sGroup = $SQL->getScheduleGroup($arrID);
+
             if (file_exists($updFile)) {
                 $updateSchedule = fopen($updFile, "r");
                 $updLine = fgets($updateSchedule);
@@ -140,13 +142,12 @@ do {
                 fclose($updateSchedule);
             }
 
-
             if ($updLine  == '' || $updLine == 'finish') {
                 $time = $arrRow['time'];
                 $type = array();
                 $runVar = array();
 
-                $sGroup = $SQL->getScheduleGroup($arrID);
+
                 while ($sGRow = $sGroup->fetch()) {
                     if ($sGRow['type'] == 'year' || $sGRow['type'] == 'group') {
 
@@ -218,37 +219,50 @@ do {
                 }
 
                 // schedule
-                if (count($runPrg1) > 0) {
-                    $fp = fopen("log/" . $arrID . ".log", "w+");
-                    for ($i=0; $i < count($runPrg1); $i++) {
-                        exec($runPrg1[$i] . " > /dev/null &");
-                        fputs($fp, $runPrg1[$i] . chr(10));
+                if (count($runPrg1) == 0 ||count($runPrg2) == 0 || count($runPrg3) == 0) {
+
+                    $SQL->deleteSchedule($arrID);
+
+                    $updateSchedule = fopen("log/server/server::" .
+                        $arrID, "w+");
+                    fwrite($updateSchedule, "not_exist");
+                    fclose($updateSchedule);
+
+                } else {
+
+                    if (count($runPrg1) > 0) {
+                        $fp = fopen("log/" . $arrID . ".log", "w+");
+                        for ($i=0; $i < count($runPrg1); $i++) {
+                            exec($runPrg1[$i] . " > /dev/null &");
+                            fputs($fp, $runPrg1[$i] . chr(10));
+                        }
+                        fclose($fp);
                     }
-                    fclose($fp);
+
+                    if (count($runPrg2) > 0) {
+                        $fp = fopen("log/" . $arrID . ".log", "w+");
+                        for ($i=0; $i < count($runPrg2); $i++) {
+                            exec($runPrg2[$i] . " > /dev/null &");
+                            fputs($fp, $runPrg2[$i] . chr(10));
+                        }
+                        fclose($fp);
+                    }
+
+                    if (count($runPrg3) > 0) {
+                        $fp = fopen("log/" . $arrID . ".log", "w+");
+                        for ($i=0; $i < count($runPrg3); $i++) {
+                            exec($runPrg3[$i] . " > /dev/null &");
+                            fputs($fp, $runPrg3[$i] . chr(10));
+                        }
+                        fclose($fp);
+                    }
+
+                    $updateSchedule = fopen("log/server/server::" .
+                        $arrID, "w+");
+                    fwrite($updateSchedule, "work");
+                    fclose($updateSchedule);
                 }
 
-                if (count($runPrg2) > 0) {
-                    $fp = fopen("log/" . $arrID . ".log", "w+");
-                    for ($i=0; $i < count($runPrg2); $i++) {
-                        exec($runPrg2[$i] . " > /dev/null &");
-                        fputs($fp, $runPrg2[$i] . chr(10));
-                    }
-                    fclose($fp);
-                }
-
-                if (count($runPrg3) > 0) {
-                    $fp = fopen("log/" . $arrID . ".log", "w+");
-                    for ($i=0; $i < count($runPrg3); $i++) {
-                        exec($runPrg3[$i] . " > /dev/null &");
-                        fputs($fp, $runPrg3[$i] . chr(10));
-                    }
-                    fclose($fp);
-                }
-
-                $updateSchedule = fopen("log/server/server::" .
-                    $arrID, "w+");
-                fwrite($updateSchedule, "work");
-                fclose($updateSchedule);
             }
 
         }
