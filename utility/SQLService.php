@@ -217,6 +217,30 @@ class SQLService
         return $result;
     }
 
+
+    /**
+     * Delete schedule
+     *
+     * @param string $sch_id main parameter
+     *
+     * @category  Utility
+     * @return    email
+     */
+    public function deleteSchedule($sch_id)
+    {
+        $this->conn->query(
+            "DELETE FROM `schedule_group`
+             WHERE `schedule_id` = '$sch_id'"
+        );
+
+        $this->conn->query(
+            "DELETE FROM `schedule`
+             WHERE `schedule_id` = '$sch_id'"
+        );
+
+
+    }
+
     /**
      * Get schedule
      *

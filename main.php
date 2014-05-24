@@ -218,7 +218,7 @@ do {
                     }
                 }
 
-                // schedule
+                // not schedule project
                 if (count($runPrg1) == 0 ||count($runPrg2) == 0 || count($runPrg3) == 0) {
 
                     $SQL->deleteSchedule($arrID);
@@ -229,6 +229,7 @@ do {
 
                 } else {
 
+                    // schedule project
                     if (count($runPrg1) > 0) {
                         $fp = fopen("log/" . $arrID . ".log", "w+");
                         for ($i=0; $i < count($runPrg1); $i++) {
