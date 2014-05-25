@@ -29,6 +29,7 @@ require_once "utility/PHPMailer/PHPMailerAutoload.php";
 require_once "config/Config.php";
 
 $SQL = new SQLService();
+$Proxy = new ProxyCheck();
 
 do {
 
@@ -38,44 +39,38 @@ do {
 
     $allProxyStatus = $SQL->getAllProxyStatus();
 
+    // Proxy Server 檢查
     if ($allProxyStatus == 'proxy_nice') {
         $noProxyStatus = 0;
-        foreach ($proxy_server as $key => $tmp) {
-            // Proxy check
-            $Proxy = new ProxyCheck();
-            $proxy_check = $Proxy->check($tmp);
-            $proxy_svr = explode(":", $tmp);
-
-            // first status don't sent email, second time will be sent email.
-            $last_status = "";
-            $fileName = 'log/proxy/proxy::' . $proxy_svr[0] . ":" . $proxy_svr[1];
+        $proxy_svr = $Proxy->checkProxy($proxy_server);
+        foreach ($proxy_svr as $proxy => $status) {
+            $fileName = 'log/proxy/proxy::' . $proxy;
             if (file_exists($fileName)) {
                 $fp = fopen($fileName, 'r');
                 $last_status = fgets($fp);
                 fclose($fp);
             }
-            $temp_status = $SQL->getProxyStatus($proxy_svr[0], $proxy_svr[1]);
+            $temp_status = $SQL->getProxyStatus($proxy);
             if ($last_status == "") {
                 $last_status = $temp_status;
             }
-            $curr_status = ($proxy_check == 'worked' ? 'on-line' : 'off-line');
+
+            $curr_status = $status;
 
             if (($curr_status != $last_status) || ($temp_status != $last_status)) {
                 if ($curr_status == 'on-line') {
                     Mailer::$subject = "Notice: " .
-                        $proxy_svr[0] . ":" .
-                        $proxy_svr[1] . " has on-line status.";
+                        $proxy . " has on-line status.";
                 } else {
                     Mailer::$subject = "Alert: " .
-                        $proxy_svr[0] . ":" .
-                        $proxy_svr[1] . " has off-line status.";
+                        $proxy . " has off-line status.";
                 }
                 Mailer::$msg = Mailer::$subject;
                 $mail = new Mailer();
                 $mail->mailSend();
             }
 
-            $SQL->updateProxyStatus($proxy_svr[0], $proxy_svr[1], $curr_status);
+            $SQL->updateProxyStatus($proxy, $curr_status);
             $fp = fopen($fileName, 'w+');
             fwrite($fp, $curr_status);
             fclose($fp);
