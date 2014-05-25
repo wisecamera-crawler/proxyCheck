@@ -144,9 +144,9 @@ class ProxyCheck
 
 
             if (trim(curl_multi_getcontent($curl_array[$i])) == '') {
-                $res[$url] = "on-line";
-            } else {
                 $res[$url] = "off-line";
+            } else {
+                $res[$url] = "on-line";
             }
 
         }
