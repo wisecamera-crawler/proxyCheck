@@ -296,7 +296,7 @@ do {
                                     fclose($errLog);
                                     exec("ps aux | grep '$cmdLine' | awk '{print $2}' | xargs kill -9");
 
-                                    $SQL->updateLog($errorMsg);
+                                    //$SQL->updateLog($errorMsg);
 
                                     Mailer::$subject = $errorMsg;
                                     $mail = new Mailer();
