@@ -122,19 +122,20 @@ class SQLService
     /**
      * Get Proxy's status
      *
-     * @param string $proxy_ip   Proxy's address
-     * @param string $proxy_port Proxy's port
+     * @param string $proxy Proxy's address
      *
      * @category  Utility
      * @return    the last status
      */
-    public function getProxyStatus($proxy_ip, $proxy_port)
+    public function getProxyStatus($proxy)
     {
+        $proxy_ip = explode(":", $proxy);
+
         $result = $this->conn->query(
             "SELECT `status`
                FROM `proxy`
-              WHERE `proxy_ip` = '$proxy_ip'
-                AND `proxy_port` = '$proxy_port'"
+              WHERE `proxy_ip` = '$proxy_ip[0]'
+                AND `proxy_port` = '$proxy_ip[1]'"
         );
 
         $rows = $result->fetch(PDO::FETCH_ASSOC);
@@ -185,20 +186,21 @@ class SQLService
     /**
      * update Proxy's status
      *
-     * @param string $proxy_ip   Proxy's address
-     * @param string $proxy_port Proxy's port
-     * @param string $status     Proxy's current status
+     * @param string $proxy  Proxy's address
+     * @param string $status Proxy's current status
      *
      * @category  Utility
      * @return    none
      */
-    public function updateProxyStatus($proxy_ip, $proxy_port, $status)
+    public function updateProxyStatus($proxy, $status)
     {
+        $proxy_ip = explode(":", $proxy);
+
         $this->conn->query(
             "UPDATE `proxy`
                 set `status` = '$status'
-              WHERE `proxy_ip` = '$proxy_ip'
-                AND `proxy_port` = '$proxy_port'"
+              WHERE `proxy_ip` = '$proxy_ip[0]'
+                AND `proxy_port` = '$proxy_ip[1]'"
         );
     }
 
