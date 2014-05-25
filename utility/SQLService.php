@@ -107,12 +107,14 @@ class SQLService
         $rowsCount = count($rows);
 
         while ($row = $result_02->fetch()) {
+            $status = 'proxy_error';
             if ($row['status'] == 'on-line') {
+                $status = 'proxy_nice';
                 break;
             }
         }
 
-        if (count($row) == $rowsCount && $row['status'] == 'off-line') {
+        if ($status == 'proxy_error') {
             return 'proxy_error';
         } else {
             return 'proxy_nice';

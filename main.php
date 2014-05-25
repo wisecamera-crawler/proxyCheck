@@ -45,6 +45,7 @@ do {
         $proxy_svr = $Proxy->checkProxy($proxy_server);
         foreach ($proxy_svr as $proxy => $status) {
             $fileName = 'log/proxy/proxy::' . $proxy;
+            $last_status = "";
             if (file_exists($fileName)) {
                 $fp = fopen($fileName, 'r');
                 $last_status = fgets($fp);
