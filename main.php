@@ -61,12 +61,10 @@ do {
 
             if (($curr_status != $last_status) || ($temp_status != $last_status)) {
                 if ($curr_status == 'on-line') {
-                    Mailer::$subject = "Notice: " .
-                        $proxy . " has on-line status.";
+                    Mailer::$subject = $proxy . " 偵測Proxy Server恢復連線";
                     $SQL->updateLog($proxyGet[0], '偵測Proxy Server恢復連線');
                 } else {
-                    Mailer::$subject = "Alert: " .
-                        $proxy . " has off-line status.";
+                    Mailer::$subject = $proxy . " 偵測Proxy Server中斷連線";
                     $SQL->updateLog($proxyGet[0], '偵測Proxy Server中斷連線');
                 }
                 Mailer::$msg = Mailer::$subject;
