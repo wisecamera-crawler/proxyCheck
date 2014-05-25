@@ -45,6 +45,7 @@ do {
         $proxy_svr = $Proxy->checkProxy($proxy_server);
         foreach ($proxy_svr as $proxy => $status) {
             $fileName = 'log/proxy/proxy::' . $proxy;
+            $proxyGet = explode(":", $proxy);
             $last_status = "";
             if (file_exists($fileName)) {
                 $fp = fopen($fileName, 'r');
@@ -62,9 +63,11 @@ do {
                 if ($curr_status == 'on-line') {
                     Mailer::$subject = "Notice: " .
                         $proxy . " has on-line status.";
+                    $SQL->updateLog($proxyGet[0], '偵測Proxy Server恢復連線');
                 } else {
                     Mailer::$subject = "Alert: " .
                         $proxy . " has off-line status.";
+                    $SQL->updateLog($proxyGet[0], '偵測Proxy Server中斷連線');
                 }
                 Mailer::$msg = Mailer::$subject;
                 $mail = new Mailer();

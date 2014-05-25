@@ -437,18 +437,25 @@ class SQLService
     /**
      * Update log
      *
-     * @param string $msg some word
+     * @param string $ip  log ip
+     * @param string $msg log msg
      *
      * @category  Utility
      * @return    sch_type
      */
-    public function updateLog($msg)
+    public function updateLog($ip, $msg)
     {
-        $this->conn->query(
+        $thisTime = date("Y-m-d H:i:s");
+        $result = $this->conn->query(
             "INSERT INTO `log`
-                (`type`, `action`)
-             VALUES ('schedule','$msg')"
+                (`ip`, `type`, `action`, `timestamp`)
+             VALUES ('$ip', 'server','$msg', '$thisTime')"
         );
 
+       if (!$result) {
+           return $result->errorInfo();
+       } else {
+           return $result->fetch();
+       }
     }
 }
