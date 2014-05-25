@@ -445,7 +445,7 @@ class SQLService
         $this->conn->query(
             "INSERT INTO `log`
                 (`type`, `action`)
-             VALUES ('project','$msg')"
+             VALUES ('schedule','$msg')"
         );
 
     }
