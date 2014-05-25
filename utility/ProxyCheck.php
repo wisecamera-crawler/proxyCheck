@@ -107,11 +107,11 @@ class ProxyCheck
      * @category  Utility
      * @return    none
      */
-    public function checkProxy($nodes){
+    public function checkProxy($nodes)
+    {
         $mh = curl_multi_init();
         $curl_array = array();
-        foreach($nodes as $i => $url)
-        {
+        foreach ($nodes as $i => $url) {
             $curl_array[$i] = curl_init("http://tw.yahoo.com");
             curl_setopt($curl_array[$i], CURLOPT_RETURNTRANSFER, 1); // return don't print
             curl_setopt($curl_array[$i], CURLOPT_TIMEOUT, 10);
@@ -120,11 +120,11 @@ class ProxyCheck
             curl_multi_add_handle($mh, $curl_array[$i]);
         }
 
-        $running = NULL;
+        $running = null;
         do {
             usleep(10000);
-            curl_multi_exec($mh,$running);
-        } while($running > 0);
+            curl_multi_exec($mh, $running);
+        } while ($running > 0);
 
         do {
             $mrc = curl_multi_exec($mh, $active);
@@ -139,19 +139,16 @@ class ProxyCheck
         }
 
         $res = array();
-        foreach($nodes as $i => $url)
-        {
-
+        foreach ($nodes as $i => $url) {
 
             if (trim(curl_multi_getcontent($curl_array[$i])) == '') {
                 $res[$url] = "off-line";
             } else {
                 $res[$url] = "on-line";
             }
-
         }
 
-        foreach($nodes as $i => $url){
+        foreach ($nodes as $i => $url) {
             curl_multi_remove_handle($mh, $curl_array[$i]);
         }
         curl_multi_close($mh);
