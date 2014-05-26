@@ -22,7 +22,7 @@
 
 namespace dispatch;
 
-require_once "utility/SQLService.php";
+require_once "utility/ProxySQLService.php";
 require_once "utility/ProxyCheck.php";
 require_once "utility/Mail.php";
 require_once "utility/PHPMailer/PHPMailerAutoload.php";
@@ -60,12 +60,14 @@ do {
             $curr_status = $status;
 
             if (($curr_status != $last_status) || ($temp_status != $last_status)) {
+                $msg1 = "偵測Proxy Server恢復連線";
+                $msg2 = "偵測Proxy Server中斷連線";
                 if ($curr_status == 'on-line') {
-                    Mailer::$subject = $proxy . " 偵測Proxy Server恢復連線";
-                    $SQL->updateLog($proxyGet[0], '偵測Proxy Server恢復連線');
+                    Mailer::$subject = $proxyGet[0] . $msg1;
+                    $SQL->updateLog($proxyGet[0], $msg1);
                 } else {
-                    Mailer::$subject = $proxy . " 偵測Proxy Server中斷連線";
-                    $SQL->updateLog($proxyGet[0], '偵測Proxy Server中斷連線');
+                    Mailer::$subject = $proxyGet[0] . $msg2;
+                    $SQL->updateLog($proxyGet[0], $msg2);
                 }
                 Mailer::$msg = Mailer::$subject;
                 $mail = new Mailer();
@@ -180,6 +182,9 @@ do {
                             $runPrg1[] = ProxyCheck::$extraProgram .
                                 ((ProxyCheck::$chkType == "project") ?
                                     $runRows['project_id'] : $runRows['url']);
+                            echo ProxyCheck::$extraProgram .
+                                ((ProxyCheck::$chkType == "project") ?
+                                    $runRows['project_id'] : $runRows['url']);
                         }
                     }
 
@@ -190,6 +195,7 @@ do {
                             $project_id = ((ProxyCheck::$chkType == "project") ?
                                 $project['project_id'] : $project['url']);
                             $runPrg2[] = ProxyCheck::$extraProgram . $project_id;
+                            echo ProxyCheck::$extraProgram . $project_id;
                         }
 
                     }
@@ -210,6 +216,9 @@ do {
                             $prg3Result = $SQL->getProjectParam($runExec);
                             while ($prg3Rows = $prg3Result->fetch()) {
                                 $runPrg3[] = ProxyCheck::$extraProgram .
+                                    ((ProxyCheck::$chkType == "project") ?
+                                        $prg3Rows['project_id'] : $prg3Rows['url']);
+                                echo ProxyCheck::$extraProgram .
                                     ((ProxyCheck::$chkType == "project") ?
                                         $prg3Rows['project_id'] : $prg3Rows['url']);
                             }
