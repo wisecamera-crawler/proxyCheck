@@ -182,9 +182,6 @@ do {
                             $runPrg1[] = ProxyCheck::$extraProgram .
                                 ((ProxyCheck::$chkType == "project") ?
                                     $runRows['project_id'] : $runRows['url']);
-                            echo ProxyCheck::$extraProgram .
-                                ((ProxyCheck::$chkType == "project") ?
-                                    $runRows['project_id'] : $runRows['url']);
                         }
                     }
 
@@ -195,7 +192,6 @@ do {
                             $project_id = ((ProxyCheck::$chkType == "project") ?
                                 $project['project_id'] : $project['url']);
                             $runPrg2[] = ProxyCheck::$extraProgram . $project_id;
-                            echo ProxyCheck::$extraProgram . $project_id;
                         }
 
                     }
@@ -216,9 +212,6 @@ do {
                             $prg3Result = $SQL->getProjectParam($runExec);
                             while ($prg3Rows = $prg3Result->fetch()) {
                                 $runPrg3[] = ProxyCheck::$extraProgram .
-                                    ((ProxyCheck::$chkType == "project") ?
-                                        $prg3Rows['project_id'] : $prg3Rows['url']);
-                                echo ProxyCheck::$extraProgram .
                                     ((ProxyCheck::$chkType == "project") ?
                                         $prg3Rows['project_id'] : $prg3Rows['url']);
                             }
