@@ -14,15 +14,15 @@ config/Config.php
 `SQLService::$user = '';` 
 `SQLService::$password = '';`
 * 檢查時間
-  ProxyCheck::$chkAllTime = 10;
-* 額外的程式
-  ProxyCheck::$extraProgram = "php main.php ";
-* 檢查方式 project , url
-  ProxyCheck::$chkType = "project";
-* 檢查時間
-  ProxyCheck::$chkTime = "240";
+`ProxyCheck::$chkAllTime = 10;`
+* crawler的程式指定的完整路徑
+`ProxyCheck::$extraProgram = "php main.php ";`
+* 檢查方式，分為 project, url
+`ProxyCheck::$chkType = "project";`
+* 檢查排程的時間
+`ProxyCheck::$chkTime = "240";`
 * 日期
-  date_default_timezone_set('Asia/Taipei');
+`date_default_timezone_set('Asia/Taipei');`
 
 
 
