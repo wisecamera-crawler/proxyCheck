@@ -38,6 +38,7 @@ class ProxyCheck
     public static $chkAllTime = "";
     public static $extraProgram = "";
     public static $chkType = "";
+    public static $chkTime = "";
     /**
      * Proxy's check
      *

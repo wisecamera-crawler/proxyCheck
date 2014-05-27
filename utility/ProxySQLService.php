@@ -452,10 +452,51 @@ class SQLService
              VALUES ('$ip', 'server','$msg', '$thisTime')"
         );
 
-       if (!$result) {
-           return $result->errorInfo();
-       } else {
-           return $result->fetch();
-       }
+        if (!$result) {
+            return $result->errorInfo();
+        } else {
+            return $result->fetch();
+        }
+    }
+
+    /**
+     * Date difference
+     *
+     * @param string $interval interval
+     * @param string $date1    from date
+     * @param string $date2    to date
+     *
+     * @category  Utility
+     * @return    sch_type
+     */
+    public function dateDifference($interval, $date1, $date2)
+    {
+        // 得到两日期之间间隔的秒
+        $timeDifference = strtotime($date2) - strtotime($date1);
+
+        switch($interval) {
+            case "w":
+                $result = bcdiv($timeDifference, 604800);
+                break;
+
+            case "d":
+                $result = bcdiv($timeDifference, 86400);
+                break;
+
+            case "h":
+                $result = bcdiv($timeDifference, 3600);
+                break;
+
+            case "n":
+                $result = bcdiv($timeDifference, 60);
+                break;
+
+            case "s":
+                $result = $timeDifference;
+                break;
+
+        }
+
+        return $result;
     }
 }

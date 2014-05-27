@@ -58,10 +58,10 @@ class Mailer
         $mail->CharSet = "utf-8";
         $mail->Encoding = "base64";
 
-        $mail->Username = "openfoundry.mailer@gmail.com";
+        $mail->Username = "openfoundry.sendmail@gmail.com";
         $mail->Password = "qwerfdsazxcv4321";
 
-        $mail->From = 'openfoundry.mailer@gmail.com';
+        $mail->From = 'openfoundry.sendmail@gmail.com';
         $mail->FromName = "Admin";
 
         $mail->Subject = Mailer::$subject;

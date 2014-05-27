@@ -25,11 +25,13 @@ SQLService::$password = 'openfoundry';
 ProxyCheck::$chkAllTime = 10;
 
 // 額外的程式
-ProxyCheck::$extraProgram = "php /Users/zivhsiao/gitsource/crawler/testCrawler.php ";
+ProxyCheck::$extraProgram = "php ./crawler/main.php ";
 
 // 檢查方式 project , url
-ProxyCheck::$chkType = "url";
+ProxyCheck::$chkType = "project";
 
+// 檢查時間
+ProxyCheck::$chkTime = "240";
 // 日期
 date_default_timezone_set('Asia/Taipei');
 
