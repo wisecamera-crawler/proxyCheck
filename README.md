@@ -10,10 +10,7 @@ proxyCheck
 ### 設定檔
 
 * config/Config.php
-* SQLService::$host = '';
-  SQLService::$dbname = '';
-  SQLService::$user = '';
-  SQLService::$password = '';
+* 資料庫連線 SQLService::$host = ''; SQLService::$dbname = ''; SQLService::$user = ''; SQLService::$password = '';
 * 檢查時間
   ProxyCheck::$chkAllTime = 10;
 * 額外的程式
