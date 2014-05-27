@@ -39,20 +39,12 @@ class Mailer
     /**
      * mailSend function, mail to send administrator
      *
-     * PHP version 5
-     *
-     * LICENSE: none
+     * @param integer $SMTPDebug
      *
      * @category  Utility
-     * @package   PackageName
-     * @author    Patrick Her <zivhsiao@gmail.com>
-     * @copyright 1997-2005 The PHP Group
-     * @license   none <none>
-     * @version   SVN: $Id$
-     * @link      none
      * @return    none
      */
-    public function mailSend()
+    public function mailSend($SMTPDebug = 0)
     {
         $SQL = new SQLService();
         $mailer = $SQL->getMailer();
@@ -75,6 +67,11 @@ class Mailer
         $mail->Subject = Mailer::$subject;
         $mail->Body = Mailer::$msg;
         $mail->IsHTML(true);
+        //是否開啟debug
+        $mail->SMTPDebug = 0;
+        if ($SMTPDebug == 1) {
+            $mail->SMTPDebug = 1;
+        }
 
         while ($rows = $mailer->fetch()) {
             $mail->AddAddress($rows['email'], "Admin Messenger");

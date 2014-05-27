@@ -5,6 +5,10 @@
  * 使用方法:
  *   php main.php > /dev/null &
  *
+ * 郵件Debug如下
+ *   $mail->mailSend(0) //Debug off, 或者空白
+ *   $mail->mailSend(1) //Debug on
+ *
  * 停止方法:
  *   ps aux | grep '[p]hp main.php | awk '{print $2}' | xargs kill -9
  *
@@ -142,7 +146,7 @@ do {
                     fclose($updateSchedule);
                 }
 
-                if ($updLine  == '' || $updLine == 'finish') {
+                if ($updLine  == '' || $updLine == 'finish' || $updLine == 'not_exist') {
                     $time = $arrRow['time'];
                     $type = array();
                     $runVar = array();
@@ -191,7 +195,6 @@ do {
                             $project = $SQL->getProject($runVar[$i]);
                             $project_id = ((ProxyCheck::$chkType == "project") ?
                                 $project['project_id'] : $project['url']);
-                            $runPrg2[] = ProxyCheck::$extraProgram . $project_id;
                         }
 
                     }
