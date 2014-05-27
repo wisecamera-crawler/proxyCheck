@@ -3,7 +3,7 @@ proxyCheck
 
 ### 主程式
 
-`php main.php > /dev/null &`
+`php proxyCheck.php > /dev/null &`
 
 ### 設定檔
 
