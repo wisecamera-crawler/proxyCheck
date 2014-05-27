@@ -16,7 +16,7 @@ config/Config.php
 * 檢查時間
 `ProxyCheck::$chkAllTime = 10;`
 * crawler的程式指定的完整路徑
-`ProxyCheck::$extraProgram = "php main.php ";`
+`ProxyCheck::$extraProgram = "php ../crawler/main.php ";`
 * 檢查方式，分為 project, url
 `ProxyCheck::$chkType = "project";`
 * 檢查排程的時間
