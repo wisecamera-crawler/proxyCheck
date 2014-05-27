@@ -37,58 +37,55 @@ $SQL = new SQLService();
 $Proxy = new ProxyCheck();
 
 do {
-
-    // 檢查Proxy Server
+    // Proxy Server 檢查
     $proxy_server = $SQL->getProxyId();
+    $proxy_svr = $Proxy->checkProxy($proxy_server);
+    $allProxyStatus = $SQL->getAllProxyStatus();
     $noProxyStatus = 0;
 
-    $allProxyStatus = $SQL->getAllProxyStatus();
-
-    // Proxy Server 檢查
-    if ($allProxyStatus == 'proxy_nice') {
-        $noProxyStatus = 0;
-        $proxy_svr = $Proxy->checkProxy($proxy_server);
-        foreach ($proxy_svr as $proxy => $status) {
-            $fileName = 'log/proxy/proxy::' . $proxy;
-            $proxyGet = explode(":", $proxy);
-            $last_status = "";
-            if (file_exists($fileName)) {
-                $fp = fopen($fileName, 'r');
-                $last_status = fgets($fp);
-                fclose($fp);
-            }
-            $temp_status = $SQL->getProxyStatus($proxy);
-            if ($last_status == "") {
-                $last_status = $temp_status;
-            }
-
-            $curr_status = $status;
-
-            if (($curr_status != $last_status) || ($temp_status != $last_status)) {
-                $msg1 = "偵測Proxy Server恢復連線";
-                $msg2 = "偵測Proxy Server中斷連線";
-                if ($curr_status == 'on-line') {
-                    Mailer::$subject = $proxyGet[0] . $msg1;
-                    $SQL->updateLog($proxyGet[0], $msg1);
-                } else {
-                    Mailer::$subject = $proxyGet[0] . $msg2;
-                    $SQL->updateLog($proxyGet[0], $msg2);
-                }
-                Mailer::$msg = Mailer::$subject;
-                $mail = new Mailer();
-                $mail->mailSend();
-            }
-
-            $SQL->updateProxyStatus($proxy, $curr_status);
-            $fp = fopen($fileName, 'w+');
-            fwrite($fp, $curr_status);
+    foreach ($proxy_svr as $proxy => $status) {
+        $fileName = 'log/proxy/proxy::' . $proxy;
+        $proxyGet = explode(":", $proxy);
+        $last_status = "";
+        if (file_exists($fileName)) {
+            $fp = fopen($fileName, 'r');
+            $last_status = fgets($fp);
             fclose($fp);
         }
-    } else {
-        // only first time must be sent email
+        $temp_status = $SQL->getProxyStatus($proxy);
+        if ($last_status == "") {
+            $last_status = $temp_status;
+        }
+
+        $curr_status = $status;
+
+        if (($curr_status != $last_status) || ($temp_status != $last_status)) {
+            $msg1 = "偵測Proxy Server恢復連線";
+            $msg2 = "偵測Proxy Server中斷連線";
+            if ($curr_status == 'on-line') {
+                Mailer::$subject = $proxyGet[0] . $msg1;
+                $SQL->updateLog($proxyGet[0], $msg1);
+            } else {
+                Mailer::$subject = $proxyGet[0] . $msg2;
+                $SQL->updateLog($proxyGet[0], $msg2);
+            }
+            Mailer::$msg = Mailer::$subject;
+            $mail = new Mailer();
+            $mail->mailSend();
+        }
+
+        $SQL->updateProxyStatus($proxy, $curr_status);
+        $fp = fopen($fileName, 'w+');
+        fwrite($fp, $curr_status);
+        fclose($fp);
+    }
+
+    if ($allProxyStatus == 'proxy_error') {
         $noProxyStatus ++;
+        $msgAll = "偵測所有Proxy Server中斷連線";
         if ($noProxyStatus == 1) {
-            Mailer::$subject = "Alert: all Proxy Server has off-line status.";
+            $SQL->updateLog('', $msgAll);
+            Mailer::$subject = $msgAll;
             $mail = new Mailer();
             $mail->mailSend();
         }
@@ -187,6 +184,10 @@ do {
                             $runPrg1[] = ProxyCheck::$extraProgram .
                                 ((ProxyCheck::$chkType == "project") ?
                                     $runRows['project_id'] : $runRows['url']);
+                            echo ProxyCheck::$extraProgram .
+                                ((ProxyCheck::$chkType == "project") ?
+                                    $runRows['project_id'] : $runRows['url']);
+                            echo chr(10);
                         }
                     }
 
@@ -197,6 +198,8 @@ do {
                             $project_id = ((ProxyCheck::$chkType == "project") ?
                                 $project['project_id'] : $project['url']);
                             $runPrg2[] = ProxyCheck::$extraProgram . $project_id;
+                            echo ProxyCheck::$extraProgram . $project_id;
+                            echo chr(10);
                         }
 
                     }
@@ -219,6 +222,10 @@ do {
                                 $runPrg3[] = ProxyCheck::$extraProgram .
                                     ((ProxyCheck::$chkType == "project") ?
                                         $prg3Rows['project_id'] : $prg3Rows['url']);
+                                echo ProxyCheck::$extraProgram .
+                                    ((ProxyCheck::$chkType == "project") ?
+                                        $prg3Rows['project_id'] : $prg3Rows['url']);
+                                echo chr(10);
                             }
                         }
                     }
@@ -293,16 +300,17 @@ do {
                         $cmdLine = trim($cmdLine);
                         $cmdLine =  substr_replace($cmdLine, "[p]", 0, 1);
                         exec("ps aux | grep '$cmdLine' | awk '{print $2}' | xargs");
-                        exec("ps aux | grep '$cmdLine' | awk '{print $10}' | xargs", $output);
+                        exec("ps aux | grep '$cmdLine' | awk '{print $9}' | xargs", $output);
 
                         // 檢查是否逾時
                         if (count($output) > 0) {
-                            if ($output[0] >= "2:00.0") {
+                            if (!empty($output[0]) &&
+                                ($SQL->dateDifference("n", $output[0] . ":00", date("H:i:s")) >= ProxyCheck::$chkTime)) {
                                 $errLog = fgets("log/error.log", "w");
-                                $errorMsg = "Alert " . date("Y-m-d H:i") .
+                                $errorMsg = "注意: " . date("Y-m-d H:i") .
                                     " " .
                                     $logFile[1] .
-                                    ": Run at 2 hours ago";
+                                    " 執行已經超過" . (ProxyCheck::$chkTime / 60) . "小時";
                                 fputs($errLog, $errorMsg);
                                 fclose($errLog);
                                 exec("ps aux | grep '$cmdLine' | awk '{print $2}' | xargs kill -9");
@@ -317,10 +325,7 @@ do {
 
                         // 沒有錯誤則表示finish
                         if (count($output) == 0) {
-                            $updateSchedule = fopen($logDir . $fileName, "w+");
-                            fwrite($updateSchedule, "finish");
-                            fclose($updateSchedule);
-
+                            unlink($logDir . $fileName);
                         }
                     }
                 }
