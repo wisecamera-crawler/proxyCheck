@@ -9,10 +9,12 @@ proxyCheck
 ### 設定檔
 config/Config.php
 * 資料庫連線 
+
 `SQLService::$host = '';`
 `SQLService::$dbname = '';` 
 `SQLService::$user = '';` 
 `SQLService::$password = '';`
+
 * 檢查時間
 `ProxyCheck::$chkAllTime = 10;`
 * crawler的程式指定的完整路徑
