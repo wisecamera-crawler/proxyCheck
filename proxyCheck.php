@@ -280,7 +280,7 @@ do {
     }
 
     // 讀取日誌檔案
-    $logDir = "./log/server/";
+    $logDir = "log/server/";
     $files = scandir($logDir);
     foreach ($files as $fileName) {
         if ($fileName != "." && $fileName != "..") {
@@ -292,7 +292,7 @@ do {
             fclose($fileLog);
 
             if ($fileLogLine == "work") {
-                $fp = fopen("./log/" . $logFile[1] . ".log", "r");
+                $fp = fopen("log/" . $logFile[1] . ".log", "r");
                 while (!feof($fp)) {
                     $cmdLine = fgets($fp);
                     $output = array();
@@ -306,7 +306,7 @@ do {
                         if (count($output) > 0) {
                             if (!empty($output[0]) &&
                                 ($SQL->dateDifference("n", $output[0] . ":00", date("H:i:s")) >= ProxyCheck::$chkTime)) {
-                                $errLog = fgets("log/error.log", "w");
+                                $errLog = fopen("log/error.log", "w+");
                                 $errorMsg = "注意: " . date("Y-m-d H:i") .
                                     " " .
                                     $logFile[1] .
@@ -325,7 +325,9 @@ do {
 
                         // 沒有錯誤則表示finish
                         if (count($output) == 0) {
-                            unlink($logDir . $fileName);
+                            if (file_exists($logDir . "/" . $fileName)) {
+                                unlink($logDir . "/" . $fileName);
+                            }
                         }
                     }
                 }
