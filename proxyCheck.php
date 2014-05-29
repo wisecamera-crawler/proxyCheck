@@ -304,8 +304,8 @@ do {
 
                         // 檢查是否逾時
                         if (count($output) > 0) {
-                            if (!empty($output[0]) &&
-                                ($SQL->dateDifference("n", $output[0] . ":00", date("H:i:s")) >= ProxyCheck::$chkTime)) {
+                            $timeDiff = $SQL->dateDifference("n", $output[0] . ":00", date("H:i:s"));
+                            if (!empty($output[0]) && $timeDiff >= ProxyCheck::$chkTime) {
                                 $errLog = fopen("log/error.log", "w+");
                                 $errorMsg = "注意: " . date("Y-m-d H:i") .
                                     " " .
