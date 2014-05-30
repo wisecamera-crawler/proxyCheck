@@ -39,6 +39,7 @@ class ProxyCheck
     public static $extraProgram = "";
     public static $chkType = "";
     public static $chkTime = "";
+    public static $chkProxyTime = "";
     /**
      * Proxy's check
      *
@@ -63,7 +64,7 @@ class ProxyCheck
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, ProxyCheck::$chkProxyTime);
         curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
         curl_setopt($ch, CURLOPT_PROXY, $proxy);
 
@@ -115,7 +116,7 @@ class ProxyCheck
         foreach ($nodes as $i => $url) {
             $curl_array[$i] = curl_init("http://tw.yahoo.com");
             curl_setopt($curl_array[$i], CURLOPT_RETURNTRANSFER, 1); // return don't print
-            curl_setopt($curl_array[$i], CURLOPT_TIMEOUT, 10);
+            curl_setopt($curl_array[$i], CURLOPT_TIMEOUT, ProxyCheck::$chkProxyTime);
             curl_setopt($curl_array[$i], CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
             curl_setopt($curl_array[$i], CURLOPT_PROXY, $url);
             curl_multi_add_handle($mh, $curl_array[$i]);
