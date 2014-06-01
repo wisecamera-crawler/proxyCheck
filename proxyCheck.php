@@ -243,8 +243,13 @@ do {
                         if (count($runPrg1) > 0) {
                             $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg1); $i++) {
-                                exec($runPrg1[$i] . " > /dev/null &");
-                                fputs($fp, $runPrg1[$i] . chr(10));
+                                $outScreen = array();
+                                $cmd = substr_replace($runPrg1[$i], "[p]", 0, 1);
+                                exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
+                                if (count($outScreen) == 0) {
+                                    exec($runPrg1[$i] . " > /dev/null &");
+                                    fputs($fp, $runPrg1[$i] . chr(10));
+                                }
                             }
                             fclose($fp);
                         }
@@ -252,8 +257,13 @@ do {
                         if (count($runPrg2) > 0) {
                             $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg2); $i++) {
-                                exec($runPrg2[$i] . " > /dev/null &");
-                                fputs($fp, $runPrg2[$i] . chr(10));
+                                $outScreen = array();
+                                $cmd = substr_replace($runPrg2[$i], "[p]", 0, 1);
+                                exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
+                                if (count($outScreen) == 0) {
+                                    exec($runPrg2[$i] . " > /dev/null &");
+                                    fputs($fp, $runPrg2[$i] . chr(10));
+                                }
                             }
                             fclose($fp);
                         }
@@ -261,8 +271,13 @@ do {
                         if (count($runPrg3) > 0) {
                             $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg3); $i++) {
-                                exec($runPrg3[$i] . " > /dev/null &");
-                                fputs($fp, $runPrg3[$i] . chr(10));
+                                $outScreen = array();
+                                $cmd = substr_replace($runPrg3[$i], "[p]", 0, 1);
+                                exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
+                                if (count($outScreen) == 0) {
+                                    exec($runPrg3[$i] . " > /dev/null &");
+                                    fputs($fp, $runPrg3[$i] . chr(10));
+                                }
                             }
                             fclose($fp);
                         }
