@@ -21,7 +21,7 @@ config/Config.php
 `ProxyCheck::$extraProgram = "php ./crawler/main.php ";`
 * 檢查方式，分為 project, url
 `ProxyCheck::$chkType = "project";`
-* 檢查排程逾時的時間，以秒計算
+* 檢查排程逾時的時間，以分鐘計算
 `ProxyCheck::$chkTime = "240";`
 * 日期
 `date_default_timezone_set('Asia/Taipei');`
