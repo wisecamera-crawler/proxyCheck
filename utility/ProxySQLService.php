@@ -435,6 +435,25 @@ class SQLService
     }
 
     /**
+     * Update project log
+     *
+     * @param string $project_id Project's id
+     *
+     * @category  Utility
+     * @return    sch_type
+     */
+    public function updateProjectStatus($project_id, $status)
+    {
+        $result = $this->conn->query(
+            "UPDATE `project`
+                SET `status` = '$status'
+              WHERE `project_id` = '$project_id'"
+        );
+
+
+    }
+
+    /**
      * Update log
      *
      * @param string $ip  log ip

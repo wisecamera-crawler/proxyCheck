@@ -74,6 +74,7 @@ do {
             $mail->mailSend();
         }
 
+        //echo $proxy . " " . $curr_status . chr(10);
         $SQL->updateProxyStatus($proxy, $curr_status);
         $fp = fopen($fileName, 'w+');
         fwrite($fp, $curr_status);
@@ -184,10 +185,6 @@ do {
                             $runPrg1[] = ProxyCheck::$extraProgram .
                                 ((ProxyCheck::$chkType == "project") ?
                                     $runRows['project_id'] : $runRows['url']);
-                            echo ProxyCheck::$extraProgram .
-                                ((ProxyCheck::$chkType == "project") ?
-                                    $runRows['project_id'] : $runRows['url']);
-                            echo chr(10);
                         }
                     }
 
@@ -198,8 +195,6 @@ do {
                             $project_id = ((ProxyCheck::$chkType == "project") ?
                                 $project['project_id'] : $project['url']);
                             $runPrg2[] = ProxyCheck::$extraProgram . $project_id;
-                            echo ProxyCheck::$extraProgram . $project_id;
-                            echo chr(10);
                         }
 
                     }
@@ -222,10 +217,6 @@ do {
                                 $runPrg3[] = ProxyCheck::$extraProgram .
                                     ((ProxyCheck::$chkType == "project") ?
                                         $prg3Rows['project_id'] : $prg3Rows['url']);
-                                echo ProxyCheck::$extraProgram .
-                                    ((ProxyCheck::$chkType == "project") ?
-                                        $prg3Rows['project_id'] : $prg3Rows['url']);
-                                echo chr(10);
                             }
                         }
                     }
@@ -244,12 +235,13 @@ do {
                             $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg1); $i++) {
                                 $outScreen = array();
-                                $cmd = substr_replace($runPrg1[$i], "[p]", 0, 1);
+                                $cmd = trim($runPrg1[$i]);
+                                $cmd = substr_replace($cmd, "[p]", 0, 1);
                                 exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
                                 if (count($outScreen) == 0) {
                                     exec($runPrg1[$i] . " > /dev/null &");
-                                    fputs($fp, $runPrg1[$i] . chr(10));
                                 }
+                                fputs($fp, $runPrg1[$i] . chr(10));
                             }
                             fclose($fp);
                         }
@@ -258,12 +250,13 @@ do {
                             $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg2); $i++) {
                                 $outScreen = array();
-                                $cmd = substr_replace($runPrg2[$i], "[p]", 0, 1);
+                                $cmd = trim($runPrg2[$i]);
+                                $cmd = substr_replace($cmd, "[p]", 0, 1);
                                 exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
                                 if (count($outScreen) == 0) {
                                     exec($runPrg2[$i] . " > /dev/null &");
-                                    fputs($fp, $runPrg2[$i] . chr(10));
                                 }
+                                fputs($fp, $runPrg2[$i] . chr(10));
                             }
                             fclose($fp);
                         }
@@ -272,15 +265,18 @@ do {
                             $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg3); $i++) {
                                 $outScreen = array();
-                                $cmd = substr_replace($runPrg3[$i], "[p]", 0, 1);
+                                $cmd = trim($runPrg3[$i]);
+                                $cmd = substr_replace($cmd, "[p]", 0, 1);
                                 exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
                                 if (count($outScreen) == 0) {
                                     exec($runPrg3[$i] . " > /dev/null &");
-                                    fputs($fp, $runPrg3[$i] . chr(10));
                                 }
+                                fputs($fp, $runPrg3[$i] . chr(10));
                             }
                             fclose($fp);
                         }
+
+                        $SQL->updateProjectStatus($arrID, "working");
 
                         $updateSchedule = fopen("log/server/server::" . $arrID, "w+");
                         fwrite($updateSchedule, "work");
@@ -320,7 +316,7 @@ do {
                         // 檢查是否逾時
                         if (count($output) > 0) {
                             $timeDiff = $SQL->dateDifference("n", $output[0] . ":00", date("H:i:s"));
-                            if (!empty($output[0]) && $timeDiff >= ProxyCheck::$chkTime) {
+                            if (!empty($output[0]) && ($timeDiff >= ProxyCheck::$chkTime)) {
                                 $errLog = fopen("log/error.log", "w+");
                                 $errorMsg = "注意: " . date("Y-m-d H:i") .
                                     " " .
@@ -330,7 +326,8 @@ do {
                                 fclose($errLog);
                                 exec("ps aux | grep '$cmdLine' | awk '{print $2}' | xargs kill -9");
 
-                                //$SQL->updateLog($errorMsg);
+                                $thisStatus = explode(" ", $cmdLine);
+                                $SQL->updateProjectStatus($thisStatus[2], "fail");
 
                                 Mailer::$subject = $errorMsg;
                                 $mail = new Mailer();
@@ -341,6 +338,9 @@ do {
                         // 沒有錯誤則表示finish
                         if (count($output) == 0) {
                             if (file_exists($logDir . "/" . $fileName)) {
+                                $thisStatus = explode(" ", $cmdLine);
+                                $SQL->updateProjectStatus($thisStatus[2], "success");
+                                print_r($thisStatus) . chr(10);
                                 unlink($logDir . "/" . $fileName);
                             }
                         }

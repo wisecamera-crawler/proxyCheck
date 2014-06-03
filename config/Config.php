@@ -25,7 +25,7 @@ SQLService::$password = 'openfoundry';
 ProxyCheck::$chkAllTime = 10;
 
 // Proxy Server每次檢查回應的時間，以秒計算
-ProxyCheck::$chkProxyTime = 20;
+ProxyCheck::$chkProxyTime = 10;
 
 // crawler的程式指定的路徑
 ProxyCheck::$extraProgram = "php ./crawler/main.php ";
@@ -33,7 +33,7 @@ ProxyCheck::$extraProgram = "php ./crawler/main.php ";
 // 檢查方式，分為 project, url
 ProxyCheck::$chkType = "project";
 
-// 檢查排程的時間，以秒計算
+// 檢查排程逾時的時間，以分鐘計算
 ProxyCheck::$chkTime = 240;
 
 // 日期
