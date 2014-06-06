@@ -327,9 +327,6 @@ do {
                                 fclose($errLog);
                                 exec("ps aux | grep '$cmdLine' | awk '{print $2}' | xargs kill -9");
 
-                                $thisStatus = explode(" ", $cmdLine);
-                                $SQL->updateProjectStatus($thisStatus[2], "fail");
-
                                 Mailer::$subject = $errorMsg;
                                 $mail = new Mailer();
                                 $mail->mailSend();
