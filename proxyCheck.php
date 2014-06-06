@@ -238,7 +238,7 @@ do {
                                 $cmd = trim($runPrg1[$i]);
                                 $cmd = substr_replace($cmd, "[p]", 0, 1);
                                 exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
-                                if (count($outScreen) == 0) {
+                                if (empty($outScreen[0])) {
                                     exec($runPrg1[$i] . " > /dev/null &");
                                 }
                                 fputs($fp, $runPrg1[$i] . chr(10));
@@ -253,7 +253,7 @@ do {
                                 $cmd = trim($runPrg2[$i]);
                                 $cmd = substr_replace($cmd, "[p]", 0, 1);
                                 exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
-                                if (count($outScreen) == 0) {
+                                if (empty($outScreen[0])) {
                                     exec($runPrg2[$i] . " > /dev/null &");
                                 }
                                 fputs($fp, $runPrg2[$i] . chr(10));
@@ -268,7 +268,7 @@ do {
                                 $cmd = trim($runPrg3[$i]);
                                 $cmd = substr_replace($cmd, "[p]", 0, 1);
                                 exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
-                                if (count($outScreen) == 0) {
+                                if (empty($outScreen[0])) {
                                     exec($runPrg3[$i] . " > /dev/null &");
                                 }
                                 fputs($fp, $runPrg3[$i] . chr(10));
@@ -318,6 +318,7 @@ do {
                             $timeDiff = $SQL->dateDifference("n", $output[0] . ":00", date("H:i:s"));
                             if (!empty($output[0]) && ($timeDiff >= ProxyCheck::$chkTime)) {
                                 $errLog = fopen("log/error.log", "w+");
+
                                 $errorMsg = "注意: " . date("Y-m-d H:i") .
                                     " " .
                                     $logFile[1] .
@@ -336,11 +337,9 @@ do {
                         }
 
                         // 沒有錯誤則表示finish
-                        if (count($output) == 0) {
+                        if (empty($output[0])) {
+                            echo "count == 0";
                             if (file_exists($logDir . "/" . $fileName)) {
-                                $thisStatus = explode(" ", $cmdLine);
-                                $SQL->updateProjectStatus($thisStatus[2], "success");
-                                print_r($thisStatus) . chr(10);
                                 unlink($logDir . "/" . $fileName);
                             }
                         }
