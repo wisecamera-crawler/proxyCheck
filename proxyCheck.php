@@ -335,7 +335,6 @@ do {
 
                         // 沒有錯誤則表示finish
                         if (empty($output[0])) {
-                            echo "count == 0";
                             if (file_exists($logDir . "/" . $fileName)) {
                                 unlink($logDir . "/" . $fileName);
                             }
