@@ -276,7 +276,8 @@ do {
                             fclose($fp);
                         }
 
-                        $SQL->updateProjectStatus($arrID, "working");
+                        $pid = explode(" ", $cmd);
+                        $SQL->updateProjectStatus(trim($pid[2]), "working");
 
                         $updateSchedule = fopen("log/server/server::" . $arrID, "w+");
                         fwrite($updateSchedule, "work");
