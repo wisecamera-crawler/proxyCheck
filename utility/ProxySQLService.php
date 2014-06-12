@@ -14,7 +14,7 @@
  * @link     none
  */
 
-namespace dispatch;
+namespace utility;
 
 use \PDO;
 
@@ -31,14 +31,14 @@ use \PDO;
  * @license  none <none>
  * @link     none
  */
-class SQLService
+class ProxySQLService
 {
     public static $conn;
 
-    public static $host = "";
-    public static $user = "";
-    public static $password = "";
-    public static $dbname = "";
+    public static $host;
+    public static $user;
+    public static $password;
+    public static $dbname;
 
     /**
      * SQL connection
@@ -56,8 +56,8 @@ class SQLService
      */
     public function __construct()
     {
-        $dsn = "mysql:host=" . SQLService::$host . ";dbname=" . SQLService::$dbname;
-        $this->conn = new PDO($dsn, SQLService::$user, SQLService::$password);
+        $dsn = "mysql:host=" . ProxySQLService::$host . ";dbname=" . ProxySQLService::$dbname;
+        $this->conn = new PDO($dsn, ProxySQLService::$user, ProxySQLService::$password);
         $this->conn->query("SET CHARACTER SET utf8 ");
         $this->conn->query("SET NAMES utf8");
     }
@@ -70,7 +70,7 @@ class SQLService
      */
     public function getProxyId()
     {
-        $proxy_svr = array();
+        $proxtSvr = array();
         $result = $this->conn->query(
             "SELECT `proxy_ip`, `proxy_port`
                FROM `proxy`
@@ -78,10 +78,10 @@ class SQLService
         );
 
         while ($rows = $result->fetch()) {
-            array_push($proxy_svr, $rows['proxy_ip'] . ":" . $rows['proxy_port']);
+            array_push($proxtSvr, $rows['proxy_ip'] . ":" . $rows['proxy_port']);
         }
 
-        return $proxy_svr;
+        return $proxtSvr;
     }
 
     /**
@@ -92,21 +92,21 @@ class SQLService
      */
     public function getAllProxyStatus()
     {
-        $result_01 = $this->conn->query(
+        $result01 = $this->conn->query(
             "SELECT count(*) FROM `proxy`"
         );
 
-        $result_02 = $this->conn->query(
+        $result02 = $this->conn->query(
             "SELECT `proxy_ip`,
                     `proxy_port`,
                     `status`
                FROM `proxy`"
         );
 
-        $rows = $result_01->fetchAll();
+        $rows = $result01->fetchAll();
         $rowsCount = count($rows);
 
-        while ($row = $result_02->fetch()) {
+        while ($row = $result02->fetch()) {
             $status = 'proxy_error';
             if ($row['status'] == 'on-line') {
                 $status = 'proxy_nice';
@@ -131,13 +131,13 @@ class SQLService
      */
     public function getProxyStatus($proxy)
     {
-        $proxy_ip = explode(":", $proxy);
+        $proxyIP = explode(":", $proxy);
 
         $result = $this->conn->query(
             "SELECT `status`
                FROM `proxy`
-              WHERE `proxy_ip` = '$proxy_ip[0]'
-                AND `proxy_port` = '$proxy_ip[1]'"
+              WHERE `proxy_ip` = '$proxyIP[0]'
+                AND `proxy_port` = '$proxyIP[1]'"
         );
 
         $rows = $result->fetch(PDO::FETCH_ASSOC);
@@ -146,19 +146,19 @@ class SQLService
     /**
      * Get Proxy's last status
      *
-     * @param string $proxy_ip   Proxy's address
-     * @param string $proxy_port Proxy's port
+     * @param string $proxyIP   Proxy's address
+     * @param string $proxyPort Proxy's port
      *
      * @category  Utility
      * @return    the last status
      */
-    public function getProxyLastStatus($proxy_ip, $proxy_port)
+    public function getProxyLastStatus($proxyIP, $proxyPort)
     {
         $result = $this->conn->query(
             "SELECT `last_status`
                FROM `proxy`
-              WHERE `proxy_ip` = '$proxy_ip'
-                AND `proxy_port` = '$proxy_port'"
+              WHERE `proxy_ip` = '$proxyIP'
+                AND `proxy_port` = '$proxyPort'"
         );
 
         $rows = $result->fetch(PDO::FETCH_ASSOC);
@@ -168,20 +168,20 @@ class SQLService
     /**
      * Get Proxy's current status
      *
-     * @param string $proxy_ip    Proxy's address
-     * @param string $proxy_port  Proxy's port
-     * @param string $last_status Proxy's last status
+     * @param string $proxyIP    Proxy's address
+     * @param string $proxyPort  Proxy's port
+     * @param string $lastStatus Proxy's last status
      *
      * @category  Utility
      * @return    none
      */
-    public function updateProxyLastStatus($proxy_ip, $proxy_port, $last_status)
+    public function updateProxyLastStatus($proxyIP, $proxyPort, $lastStatus)
     {
         $this->conn->query(
             "UPDATE `proxy`
-                SET `last_status` = '$last_status'
-              WHERE `proxy_ip` = '$proxy_ip'
-                AND `proxy_port` = '$proxy_port'"
+                SET `last_status` = '$lastStatus'
+              WHERE `proxy_ip` = '$proxyIP'
+                AND `proxy_port` = '$proxyPort'"
         );
     }
 
@@ -196,13 +196,13 @@ class SQLService
      */
     public function updateProxyStatus($proxy, $status)
     {
-        $proxy_ip = explode(":", $proxy);
+        $proxyIP = explode(":", $proxy);
 
         $this->conn->query(
             "UPDATE `proxy`
                 set `status` = '$status'
-              WHERE `proxy_ip` = '$proxy_ip[0]'
-                AND `proxy_port` = '$proxy_ip[1]'"
+              WHERE `proxy_ip` = '$proxyIP[0]'
+                AND `proxy_port` = '$proxyIP[1]'"
         );
     }
 
@@ -225,21 +225,21 @@ class SQLService
     /**
      * Delete schedule
      *
-     * @param string $sch_id main parameter
+     * @param string $schID main parameter
      *
      * @category  Utility
      * @return    email
      */
-    public function deleteSchedule($sch_id)
+    public function deleteSchedule($schID)
     {
         $this->conn->query(
             "DELETE FROM `schedule_group`
-             WHERE `schedule_id` = '$sch_id'"
+             WHERE `schedule_id` = '$schID'"
         );
 
         $this->conn->query(
             "DELETE FROM `schedule`
-             WHERE `schedule_id` = '$sch_id'"
+             WHERE `schedule_id` = '$schID'"
         );
 
 
@@ -284,19 +284,19 @@ class SQLService
      * Get schedule_group for schedule
      *
      * @param string $status     Schedule's status
-     * @param string $sch_id     Schedule's id
+     * @param string $schID     Schedule's id
      * @param string $start_time Start time
      *
      * @category  Utility
      * @return    sch_type
      */
-    public function updateSchedule($status, $sch_id, $start_time = '')
+    public function updateSchedule($status, $schID, $start_time = '')
     {
         $this->conn->query(
             "UPDATE `schedule`
                 SET `status` = '$status',
                     `start_time` = '$start_time'
-              WHERE `schedule_id` = $sch_id"
+              WHERE `schedule_id` = $schID"
         );
 
     }
@@ -304,12 +304,12 @@ class SQLService
     /**
      * Get schedule_group for schedule
      *
-     * @param string $sch_id Schedule group's id
+     * @param string $schID Schedule group's id
      *
      * @category  Utility
      * @return    sch_type
      */
-    public function getScheduleGroup($sch_id)
+    public function getScheduleGroup($schID)
     {
         $result = $this->conn->query(
             "SELECT `schedule_group_id`,
@@ -317,7 +317,7 @@ class SQLService
                     `member`,
                     `type`
                FROM `schedule_group`
-              WHERE `schedule_id` = $sch_id
+              WHERE `schedule_id` = $schID
            ORDER BY `type`"
         );
 
@@ -327,14 +327,14 @@ class SQLService
     /**
      * Get schedule_group for schedule
      *
-     * @param string $project_id Schedule group's id
+     * @param string $projectID Schedule group's id
      * @param string $year       Schedule group's id
      * @param string $type       Schedule group's id
      *
      * @category  Utility
      * @return    sch_type
      */
-    public function getProject($project_id = '', $year = '', $type = '')
+    public function getProject($projectID = '', $year = '', $type = '')
     {
 
         $result = $this->conn->query(
@@ -343,12 +343,12 @@ class SQLService
                FROM `project`"
         );
 
-        if ($project_id != '') {
+        if ($projectID != '') {
             $result = $this->conn->query(
                 "SELECT `project_id`,
                         `url`
                   FROM `project`
-                  WHERE `project_id` = '" . $project_id . "'"
+                  WHERE `project_id` = '" . $projectID . "'"
             );
 
         }
@@ -437,17 +437,18 @@ class SQLService
     /**
      * Update project log
      *
-     * @param string $project_id Project's id
+     * @param string $projectID Project's id
+     * @param string $status    Project's Status
      *
      * @category  Utility
      * @return    sch_type
      */
-    public function updateProjectStatus($project_id, $status)
+    public function updateProjectStatus($projectID, $status)
     {
         $result = $this->conn->query(
             "UPDATE `project`
                 SET `status` = '$status'
-              WHERE `project_id` = '$project_id'"
+              WHERE `project_id` = '$projectID'"
         );
 
 

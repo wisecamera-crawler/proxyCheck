@@ -15,7 +15,7 @@
  * @link      none
  */
 
-namespace dispatch;
+namespace utility;
 
 /**
  * Mailer is simple mail class
@@ -46,7 +46,7 @@ class Mailer
      */
     public function mailSend($SMTPDebug = 0)
     {
-        $SQL = new SQLService();
+        $SQL = new ProxySQLService();
         $mailer = $SQL->getMailer();
 
         $mail = new \PHPMailer();

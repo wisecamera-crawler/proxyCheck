@@ -1,68 +1,47 @@
 <?php
-/**
- * Dispatch Server 主要的檔案
- *
- * 使用方法:
- *   php proxyCheck.php > /dev/null &
- *
- * 郵件Debug如下
- *   $mail->mailSend(0) //Debug off, 或者空白
- *   $mail->mailSend(1) //Debug on
 
- *
- * 停止方法:
- *   ps aux | grep '[p]hp proxyCheck.php | awk '{print $2}' | xargs kill -9
- *
- * PHP version 5
- *
- * LICENSE : none
- *
- * @category Controller
- * @package  Patrick
- * @author   Patrick Her <zivhsiao@gmail.com>
- * @license  none <none>
- * @version  GIT: <id>
- * @link     none
- */
+date_default_timezone_set('Asia/Taipei');
+require_once ("autoLoader.php");
+require_once ("utility/PHPMailer/class.phpmailer.php");
 
-namespace dispatch;
+use utility\Mailer;
+use utility\MakeConfig;
+use utility\ProxyCheck;
+use utility\ProxySQLService;
 
-require_once "utility/ProxySQLService.php";
-require_once "utility/ProxyCheck.php";
-require_once "utility/Mail.php";
-require_once "utility/PHPMailer/PHPMailerAutoload.php";
-require_once "config/Config.php";
+$makeConfig = new MakeConfig();
+$makeConfig->Make();
 
-$SQL = new SQLService();
+$SQL = new ProxySQLService();
 $Proxy = new ProxyCheck();
 
 do {
     // Proxy Server 檢查
-    $proxy_server = $SQL->getProxyId();
-    $proxy_svr = $Proxy->checkProxy($proxy_server);
+    $proxyServer = $SQL->getProxyId();
+    $proxySvr = $Proxy->checkProxy($proxyServer);
     $allProxyStatus = $SQL->getAllProxyStatus();
     $noProxyStatus = 0;
 
-    foreach ($proxy_svr as $proxy => $status) {
+    foreach ($proxySvr as $proxy => $status) {
         $fileName = 'log/proxy/proxy::' . $proxy;
         $proxyGet = explode(":", $proxy);
-        $last_status = "";
+        $lastStatus = "";
         if (file_exists($fileName)) {
             $fp = fopen($fileName, 'r');
-            $last_status = fgets($fp);
+            $lastStatus = fgets($fp);
             fclose($fp);
         }
-        $temp_status = $SQL->getProxyStatus($proxy);
-        if ($last_status == "") {
-            $last_status = $temp_status;
+        $tempStatus = $SQL->getProxyStatus($proxy);
+        if ($lastStatus == "") {
+            $lastStatus = $tempStatus;
         }
 
-        $curr_status = $status;
+        $currStatus = $status;
 
-        if (($curr_status != $last_status) || ($temp_status != $last_status)) {
+        if (($currStatus != $lastStatus) || ($tempStatus != $lastStatus)) {
             $msg1 = "偵測Proxy Server恢復連線";
             $msg2 = "偵測Proxy Server中斷連線";
-            if ($curr_status == 'on-line') {
+            if ($currStatus == 'on-line') {
                 Mailer::$subject = $proxyGet[0] . $msg1;
                 $SQL->updateLog($proxyGet[0], $msg1);
             } else {
@@ -74,10 +53,10 @@ do {
             $mail->mailSend();
         }
 
-        //echo $proxy . " " . $curr_status . chr(10);
-        $SQL->updateProxyStatus($proxy, $curr_status);
+        //echo $proxy . " " . $currStatus . chr(10);
+        $SQL->updateProxyStatus($proxy, $currStatus);
         $fp = fopen($fileName, 'w+');
-        fwrite($fp, $curr_status);
+        fwrite($fp, $currStatus);
         fclose($fp);
     }
 
@@ -96,7 +75,7 @@ do {
     // 檢查排程, 如果proxy都沒有就跳過
     if ($noProxyStatus == 0) {
         $schedule = $SQL->getSchedule();
-        $proxy_server = new ProxyCheck();
+        $proxyServer = new ProxyCheck();
 
         while ($rows = $schedule->fetch()) {
 
@@ -192,9 +171,9 @@ do {
                     if (count($runVar) >= 1 && $type[0] == 'project') {
                         for ($i = 0; $i < count($runVar); $i++) {
                             $project = $SQL->getProject($runVar[$i]);
-                            $project_id = ((ProxyCheck::$chkType == "project") ?
+                            $projectID = ((ProxyCheck::$chkType == "project") ?
                                 $project['project_id'] : $project['url']);
-                            $runPrg2[] = ProxyCheck::$extraProgram . $project_id;
+                            $runPrg2[] = ProxyCheck::$extraProgram . $projectID;
                         }
 
                     }
@@ -239,6 +218,8 @@ do {
                                 $cmd = substr_replace($cmd, "[p]", 0, 1);
                                 exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
                                 if (empty($outScreen[0])) {
+                                    $pid = explode(" ", $cmd);
+                                    $SQL->updateProjectStatus(trim($pid[2]), "working");
                                     exec($runPrg1[$i] . " > /dev/null &");
                                 }
                                 fputs($fp, $runPrg1[$i] . chr(10));
@@ -254,6 +235,8 @@ do {
                                 $cmd = substr_replace($cmd, "[p]", 0, 1);
                                 exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
                                 if (empty($outScreen[0])) {
+                                    $pid = explode(" ", $cmd);
+                                    $SQL->updateProjectStatus(trim($pid[2]), "working");
                                     exec($runPrg2[$i] . " > /dev/null &");
                                 }
                                 fputs($fp, $runPrg2[$i] . chr(10));
@@ -269,6 +252,8 @@ do {
                                 $cmd = substr_replace($cmd, "[p]", 0, 1);
                                 exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
                                 if (empty($outScreen[0])) {
+                                    $pid = explode(" ", $cmd);
+                                    $SQL->updateProjectStatus(trim($pid[2]), "working");
                                     exec($runPrg3[$i] . " > /dev/null &");
                                 }
                                 fputs($fp, $runPrg3[$i] . chr(10));
@@ -276,8 +261,7 @@ do {
                             fclose($fp);
                         }
 
-                        $pid = explode(" ", $cmd);
-                        $SQL->updateProjectStatus(trim($pid[2]), "working");
+
 
                         $updateSchedule = fopen("log/server/server::" . $arrID, "w+");
                         fwrite($updateSchedule, "work");
@@ -318,12 +302,10 @@ do {
                         if (count($output) > 0) {
                             $timeDiff = $SQL->dateDifference("n", $output[0] . ":00", date("H:i:s"));
                             if (!empty($output[0]) && ($timeDiff >= ProxyCheck::$chkTime)) {
+                                $cmdFile = explode(" ", $cmdLine);
                                 $errLog = fopen("log/error.log", "w+");
-
-                                $errorMsg = "注意: " . date("Y-m-d H:i") .
-                                    " " .
-                                    $logFile[1] .
-                                    " 執行已經超過" . (ProxyCheck::$chkTime / 60) . "小時";
+                                $errorMsg = $cmdFile[2] .
+                                    " 執行由 " . $output[0] . ":00" . " 已經超過" . (ProxyCheck::$chkTime / 60) . "小時";
                                 fputs($errLog, $errorMsg);
                                 fclose($errLog);
                                 exec("ps aux | grep '$cmdLine' | awk '{print $2}' | xargs kill -9");

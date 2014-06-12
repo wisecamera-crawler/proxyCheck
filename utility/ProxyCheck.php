@@ -15,7 +15,7 @@
  * @link      none
  */
 
-namespace dispatch;
+namespace utility;
 
 /**
  * Proxy's check
@@ -35,11 +35,11 @@ namespace dispatch;
 class ProxyCheck
 {
 
-    public static $chkAllTime = "";
-    public static $extraProgram = "";
-    public static $chkType = "";
-    public static $chkTime = "";
-    public static $chkProxyTime = "";
+    public static $chkAllTime;
+    public static $extraProgram;
+    public static $chkType;
+    public static $chkTime;
+    public static $chkProxyTime;
     /**
      * Proxy's check
      *
@@ -54,13 +54,13 @@ class ProxyCheck
      */
     public function check($proxy)
     {
-        $url_array = array(
+        $urlArray = array(
             'http://www.google.com',
             'http://tw.yahoo.com',
             'http://www.pchome.com.tw'
         );
 
-        $url = $url_array[rand(0, count($url_array) - 1)];
+        $url = $urlArray[rand(0, count($urlArray) - 1)];
 
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -156,4 +156,5 @@ class ProxyCheck
         curl_multi_close($mh);
         return $res;
     }
+
 }
