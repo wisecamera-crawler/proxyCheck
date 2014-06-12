@@ -8,6 +8,7 @@ proxyCheck
 
 ### 設定檔，系統自動產生
 `~/crawler_conf`
+
 檔案的內容如下，第一次預設值如下
 * 資料庫連線 
 `SQLService::$host = ''`
