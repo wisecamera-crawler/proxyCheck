@@ -14,62 +14,60 @@ $makeConfig->Make();
 
 $SQL = new ProxySQLService();
 $Proxy = new ProxyCheck();
+$check = 0;
 
 do {
     // Proxy Server 檢查
     $proxyServer = $SQL->getProxyId();
     $proxySvr = $Proxy->checkProxy($proxyServer);
-    $allProxyStatus = $SQL->getAllProxyStatus();
-    $noProxyStatus = 0;
 
     foreach ($proxySvr as $proxy => $status) {
         $fileName = 'log/proxy/proxy::' . $proxy;
         $proxyGet = explode(":", $proxy);
-        $lastStatus = "";
-        if (file_exists($fileName)) {
-            $fp = fopen($fileName, 'r');
-            $lastStatus = fgets($fp);
-            fclose($fp);
-        }
-        $tempStatus = $SQL->getProxyStatus($proxy);
-        if ($lastStatus == "") {
-            $lastStatus = $tempStatus;
-        }
 
         $currStatus = $status;
+        $tempStatus = $SQL->getProxyStatus($proxy);
 
-        if (($currStatus != $lastStatus) || ($tempStatus != $lastStatus)) {
-            $msg1 = "偵測Proxy Server恢復連線";
-            $msg2 = "偵測Proxy Server中斷連線";
-            if ($currStatus == 'on-line') {
-                Mailer::$subject = $proxyGet[0] . $msg1;
-                $SQL->updateLog($proxyGet[0], $msg1);
-            } else {
-                Mailer::$subject = $proxyGet[0] . $msg2;
-                $SQL->updateLog($proxyGet[0], $msg2);
+        if ($currStatus != $tempStatus) {
+            if (!empty($currStatus) && !empty($tempStatus)) {
+                $msg1 = "偵測Proxy Server恢復連線";
+                $msg2 = "偵測Proxy Server中斷連線";
+                $message1 = "偵測Proxy Server, " . $proxyGet[0] . ", 於" . date("Y-m-d H:i:s") . "恢復連線";
+                $message2 = "偵測Proxy Server, " . $proxyGet[0] . ", 於" . date("Y-m-d H:i:s") . "中斷連線";
+
+                if ($currStatus == 'on-line') {
+                    Mailer::$subject = $message1;
+                    $SQL->updateLog($proxyGet[0], $msg1);
+                } else {
+                    Mailer::$subject = $message2;
+                    $SQL->updateLog($proxyGet[0], $msg2);
+                }
+                Mailer::$msg = Mailer::$subject;
+                $mail = new Mailer();
+                $mail->mailSend();
             }
-            Mailer::$msg = Mailer::$subject;
-            $mail = new Mailer();
-            $mail->mailSend();
         }
 
-        //echo $proxy . " " . $currStatus . chr(10);
         $SQL->updateProxyStatus($proxy, $currStatus);
         $fp = fopen($fileName, 'w+');
         fwrite($fp, $currStatus);
         fclose($fp);
     }
 
-    if ($allProxyStatus == 'proxy_error') {
-        $noProxyStatus ++;
-        $msgAll = "偵測所有Proxy Server中斷連線";
-        if ($noProxyStatus == 1) {
-            $SQL->updateLog('', $msgAll);
-            Mailer::$subject = $msgAll;
-            $mail = new Mailer();
-            $mail->mailSend();
-        }
+    $allProxyStatus = $SQL->getAllProxyStatus();
 
+    if ($allProxyStatus == "proxy_error") {
+        $check ++;
+    } else {
+        $check = 0;
+    }
+
+    if ($allProxyStatus == "proxy_error" && $check == 1) {
+        $msgAll = "偵測所有Proxy Server中斷連線";
+        $SQL->updateLog('', $msgAll);
+        Mailer::$subject = $msgAll;
+        $mail = new Mailer();
+        $mail->mailSend();
     }
 
     // 檢查排程, 如果proxy都沒有就跳過
