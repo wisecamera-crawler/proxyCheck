@@ -71,7 +71,7 @@ do {
     }
 
     // 檢查排程, 如果proxy都沒有就跳過
-    if ($noProxyStatus == 0) {
+    if ($allProxyStatus == 'proxy_nice') {
         $schedule = $SQL->getSchedule();
         $proxyServer = new ProxyCheck();
 
