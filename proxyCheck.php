@@ -43,20 +43,16 @@ do {
                 $message1 = "偵測Proxy Server, " . $proxyGet[0] . ", 於" . date("Y-m-d H:i:s") . "恢復連線";
                 $message2 = "偵測Proxy Server, " . $proxyGet[0] . ", 於" . date("Y-m-d H:i:s") . "中斷連線";
 
-                $proxyServerAgain = $SQL->getProxyStatus($proxy);
-
-                if ($proxyServerAgain == 'on-line' || $proxyServerAgain == "off-line") {
-                    if ($currStatus == 'on-line') {
-                        Mailer::$subject = $message1;
-                        $SQL->updateLog($proxyGet[0], $msg1);
-                    } else {
-                        Mailer::$subject = $message2;
-                        $SQL->updateLog($proxyGet[0], $msg2);
-                    }
-                    Mailer::$msg = Mailer::$subject;
-                    $mail = new Mailer();
-                    $mail->mailSend();
+                if ($currStatus == 'on-line') {
+                    Mailer::$subject = $message1;
+                    $SQL->updateLog($proxyGet[0], $msg1);
+                } else {
+                    Mailer::$subject = $message2;
+                    $SQL->updateLog($proxyGet[0], $msg2);
                 }
+                Mailer::$msg = Mailer::$subject;
+                $mail = new Mailer();
+                $mail->mailSend();
             }
         }
 
@@ -78,7 +74,6 @@ do {
         $msgAll = "偵測所有Proxy Server中斷連線";
         $SQL->updateLog('', $msgAll);
         Mailer::$subject = $msgAll;
-        Mailer::$msg = Mailer::$subject;
         $mail = new Mailer();
         $mail->mailSend();
     }
