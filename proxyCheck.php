@@ -12,6 +12,14 @@ use utility\ProxySQLService;
 $makeConfig = new MakeConfig();
 $makeConfig->Make();
 
+exec("ps aux | grep '[p]hp proxyCheck.php' | awk '{print $2}' | xargs", $firstCmd);
+$firstRun = explode(" ", $firstCmd[0]);
+if (count($firstRun) > 1) {
+    echo "Alert: This program is still running." . chr(10);
+    exit;
+}
+
+
 $SQL = new ProxySQLService();
 $Proxy = new ProxyCheck();
 $check = 0;
