@@ -25,6 +25,15 @@ $Proxy = new ProxyCheck();
 $check = 0;
 
 do {
+
+    $dateNow = date('s');
+    if ($dateNow == '00') {
+        $startNow = 'start';
+    } else {
+        $startNow = 'stop';
+        continue;
+    }
+
     // Proxy Server 檢查
     $proxyServer = $SQL->getProxyId();
     $proxySvr = $Proxy->checkProxy($proxyServer);
