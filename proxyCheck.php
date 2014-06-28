@@ -219,13 +219,10 @@ do {
                         if (count($runPrg1) > 0) {
                             $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg1); $i++) {
-                                $outScreen = array();
-                                $cmd = trim($runPrg1[$i]);
-                                $cmd = substr_replace($cmd, "[p]", 0, 1);
-                                exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
-                                if (empty($outScreen[0])) {
-                                    $pid = explode(" ", $cmd);
-                                    $SQL->updateProjectStatus(trim($pid[2]), "working");
+                                $out = explode(" ", $runPrg1[$i]);
+                                $proxyStatus = $SQL->getProjectStatus(trim($out[2]));
+                                if ($proxyStatus != 'working') {
+                                    $SQL->updateProjectStatus(trim($out[2]), "working");
                                     exec($runPrg1[$i] . " > /dev/null &");
                                 }
                                 fputs($fp, $runPrg1[$i] . chr(10));
@@ -236,13 +233,10 @@ do {
                         if (count($runPrg2) > 0) {
                             $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg2); $i++) {
-                                $outScreen = array();
-                                $cmd = trim($runPrg2[$i]);
-                                $cmd = substr_replace($cmd, "[p]", 0, 1);
-                                exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
-                                if (empty($outScreen[0])) {
-                                    $pid = explode(" ", $cmd);
-                                    $SQL->updateProjectStatus(trim($pid[2]), "working");
+                                $out = explode(" ", $runPrg2[$i]);
+                                $proxyStatus = $SQL->getProjectStatus(trim($out[2]));
+                                if ($proxyStatus != 'working') {
+                                    $SQL->updateProjectStatus(trim($out[2]), "working");
                                     exec($runPrg2[$i] . " > /dev/null &");
                                 }
                                 fputs($fp, $runPrg2[$i] . chr(10));
@@ -253,13 +247,10 @@ do {
                         if (count($runPrg3) > 0) {
                             $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg3); $i++) {
-                                $outScreen = array();
-                                $cmd = trim($runPrg3[$i]);
-                                $cmd = substr_replace($cmd, "[p]", 0, 1);
-                                exec("ps aux | grep '$cmd' | awk '{print $2}' | xargs", $outScreen);
-                                if (empty($outScreen[0])) {
-                                    $pid = explode(" ", $cmd);
-                                    $SQL->updateProjectStatus(trim($pid[2]), "working");
+                                $out = explode(" ", $runPrg3[$i]);
+                                $proxyStatus = $SQL->getProjectStatus(trim($out[2]));
+                                if ($proxyStatus != 'working') {
+                                    $SQL->updateProjectStatus(trim($out[2]), "working");
                                     exec($runPrg3[$i] . " > /dev/null &");
                                 }
                                 fputs($fp, $runPrg3[$i] . chr(10));

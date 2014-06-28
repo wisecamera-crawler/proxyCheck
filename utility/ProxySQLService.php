@@ -480,6 +480,26 @@ class ProxySQLService
     }
 
     /**
+     * Project's status
+     *
+     * @param string $projectID project's id
+     *
+     * @category  Utility
+     * @return    sch_type
+     */
+    public function getProjectStatus($projectID)
+    {
+        $result = $this->conn->query(
+            "SELECT `status`
+               FROM `project`
+              WHERE `project_id` = '$projectID'
+            "
+        );
+
+        return $result;
+    }
+
+    /**
      * Date difference
      *
      * @param string $interval interval
