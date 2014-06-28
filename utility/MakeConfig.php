@@ -40,7 +40,7 @@ class MakeConfig
                 break;
             }
         }
-        $defHome = "nsccrawler_conf";
+        $defHome = "../nsccrawler_conf";
 
         $dataWrite[0] = "\$host = '127.0.0.1'";
         $dataWrite[1] = "\$dbname = 'NSC'";
@@ -48,7 +48,7 @@ class MakeConfig
         $dataWrite[3] = "\$password = 'openfoundry'";
         $dataWrite[4] = "\$chkAllTime = 10";
         $dataWrite[5] = "\$chkProxyTime = 10";
-        $dataWrite[6] = "\$extraProgram = 'php ../crawler_gh/main.php '";
+        $dataWrite[6] = "\$extraProgram = 'php ../crawler/main.php '";
         $dataWrite[7] = "\$chkType = 'project'";
         $dataWrite[8] = "\$chkTime = 240";
 
