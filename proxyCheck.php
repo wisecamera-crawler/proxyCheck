@@ -41,15 +41,16 @@ do {
                 && $checkFile != 'server' && $checkFile != "error.log"
                 && $checkFile != '.DS_Store') {
                 $fileTime = date("Y-m-d H:i", filemtime(dirname(__FILE__) ."/" .$log . "/" . $checkFile));
+
                 if ($thisDate[1] <= $fileTime && $thisDate[0] >= $fileTime) {
                     $logLine = fopen($log . "/" . $checkFile, "r");
                     while (!feof($logLine)) {
                         $logToLine = fgets($logLine);
                         $fileForDate = explode(" ", $logToLine);
                         $chkCheck = $SQL->getProjectStatus(trim($fileForDate[2]));
-                        print_r($fileForDate);
                         while ($chkFiles = $chkCheck->fetch()) {
-                            if ($chkFiles['status'] != 'working') {
+                            if ($chkFiles['status'] != 'working'
+                                && (($thisDate[0] <= $chkFiles['last_update']) && $thisDate[1] >= $chkFiles['last_update'])) {
                                 exec(ProxyCheck::$extraProgram . $fileForDate[2]);
                             }
                         }
@@ -65,6 +66,7 @@ do {
                           "1" => date("Y-m-d H:i", strtotime("-30 minutes")));
 
     }
+
 
     // Proxy Server 檢查
     $proxyServer = $SQL->getProxyId();
