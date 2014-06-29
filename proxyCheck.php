@@ -27,6 +27,45 @@ $thisDatetime = date("Y-m-d H:i");
 
 do {
 
+    // every 30 minutes check
+    $thisDate = array("0" => $thisDatetime,
+                      "1" => date("Y-m-d H:i", strtotime($thisDatetime) - (30*60)));
+
+    if (date("Y-m-d H:i") == $thisDate[0]) {
+        $log = "log/";
+        $logPath = scandir($log);
+
+        foreach ($logPath as $checkFile) {
+            if ($checkFile != "." && $checkFile != ".."
+                && $checkFile != 'proxy' && $checkFile != 'run'
+                && $checkFile != 'server' && $checkFile != "error.log"
+                && $checkFile != '.DS_Store') {
+                $fileTime = date("Y-m-d H:i", filemtime(dirname(__FILE__) ."/" .$log . "/" . $checkFile));
+                if ($thisDate[1] <= $fileTime && $thisDate[0] >= $fileTime) {
+                    $logLine = fopen($log . "/" . $checkFile, "r");
+                    while (!feof($logLine)) {
+                        $logToLine = fgets($logLine);
+                        $fileForDate = explode(" ", $logToLine);
+                        $chkCheck = $SQL->getProjectStatus(trim($fileForDate[2]));
+                        print_r($fileForDate);
+                        while ($chkFiles = $chkCheck->fetch()) {
+                            if ($chkFiles['status'] != 'working') {
+                                exec(ProxyCheck::$extraProgram . $fileForDate[2]);
+                            }
+                        }
+                    }
+                    fclose($logLine);
+                }
+            }
+        }
+
+
+        $thisDatetime = date("Y-m-d H:i", strtotime("+30 minutes"));
+        $thisDate = array("0" => $thisDatetime,
+                          "1" => date("Y-m-d H:i", strtotime("-30 minutes")));
+
+    }
+
     // Proxy Server 檢查
     $proxyServer = $SQL->getProxyId();
     $proxySvr = $Proxy->checkProxy($proxyServer);
@@ -82,46 +121,6 @@ do {
 
     // check proxy ending
 
-
-    // every 30 minutes check
-    $thisDate = array("0" => $thisDatetime,
-                      "1" => date("Y-m-d H:i", strtotime($thisDatetime) - (30*60)));
-
-
-    if (date("Y-m-d H:i") == $thisDate[0]) {
-        $log = "log/";
-        $logPath = scandir($log);
-
-        foreach ($logPath as $checkFile) {
-            if ($checkFile != "." && $checkFile != ".."
-                && $checkFile != 'proxy' && $checkFile != 'run'
-                && $checkFile != 'server' && $checkFile != "error.log"
-                && $checkFile != '.DS_Store') {
-                $fileTime = date("Y-m-d H:i", filemtime(dirname(__FILE__) ."/" .$log . "/" . $checkFile));
-                if ($thisDate[1] <= $fileTime && $thisDate[0] >= $fileTime) {
-                    $logLine = fopen($log . "/" . $checkFile, "r");
-                    while (!feof($logLine)) {
-                        $logToLine = fgets($logLine);
-                        $fileForDate = explode(" ", $logToLine);
-                        $chkCheck = $SQL->getProjectStatus(trim($fileForDate[2]));
-                        print_r($fileForDate);
-                        while ($chkFiles = $chkCheck->fetch()) {
-                            if ($chkFiles['status'] != 'working') {
-                                exec(ProxyCheck::$extraProgram . $fileForDate[2]);
-                            }
-                        }
-                    }
-                    fclose($logLine);
-                }
-            }
-        }
-
-
-        $thisDatetime = date("Y-m-d H:i", strtotime("+30 minutes"));
-        $thisDate = array("0" => $thisDatetime,
-                          "1" => date("Y-m-d H:i", strtotime("-30 minutes")));
-
-    }
 
     // 檢查排程, 如果proxy都沒有就跳過
     if ($allProxyStatus == 'proxy_nice') {
