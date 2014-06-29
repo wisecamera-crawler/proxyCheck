@@ -490,7 +490,8 @@ class ProxySQLService
     public function getProjectStatus($projectID)
     {
         $result = $this->conn->query(
-            "SELECT `status`
+            "SELECT `status`,
+                    `last_update`
                FROM `project`
               WHERE `project_id` = '$projectID'
             "
@@ -498,6 +499,32 @@ class ProxySQLService
 
         return $result;
     }
+
+    /**
+     * Project's status
+     *
+     * @param string $projectID project's id
+     *
+     * @category  Utility
+     * @return    sch_type
+     */
+    public function updateCrawlerTimeOut($projectID)
+    {
+        $timeOut = 'time_out';
+
+        $this->conn->query(
+            "INSERT INTO `crawler_status`
+                SET `status` = $$timeOut,
+                    `wiki` = $timeOut,
+                    `vcs` = $timeOut,
+                    `issue` = $timeOut,
+                    `download` = $timeOut
+              WHERE `project_id` = '$projectID'
+            "
+        );
+
+    }
+
 
     /**
      * Date difference

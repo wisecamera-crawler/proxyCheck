@@ -23,16 +23,9 @@ if (count($firstRun) > 1) {
 $SQL = new ProxySQLService();
 $Proxy = new ProxyCheck();
 $check = 0;
+$thisDatetime = date("Y-m-d H:i");
 
 do {
-
-    $dateNow = date('s');
-    if ($dateNow == '00') {
-        $startNow = 'start';
-    } else {
-        $startNow = 'stop';
-        continue;
-    }
 
     // Proxy Server 檢查
     $proxyServer = $SQL->getProxyId();
@@ -87,8 +80,48 @@ do {
         $mail->mailSend();
     }
 
+    // check proxy ending
+
+    // every 30 minutes check
+    $thisDate = array("0" => $thisDatetime,
+                      "1" => date($thisDatetime, strtotime("-30 minutes")));
+
+    if (date("Y-m-d H:i") == $thisDate[0]) {
+
+        $log = "log/";
+        $logPath = scandir($log);
+
+        foreach ($logPath as $checkFile) {
+            if ($checkFile != "." && $checkFile != ".."
+                && $checkFile != 'proxy' && $checkFile != 'run' && $checkFile != 'server') {
+                $fileTime = date("Y-m-d H:i", filemtime(dirname(__FILE__) ."/" .$log . "/" . $checkFile));
+
+                if ($thisDate2 <= $fileTime && date("Y-m-d H:s") >= $fileTime) {
+                    $logLine = fopen($log . "/" . $checkFile, "r");
+                    while (!feof($logLine)) {
+                        $logToLine = fgets($logLine);
+                        $fileForDate = explode(" ", $logToLine);
+                        $chkCheck = $SQL->getProjectStatus(trim($fileForDate[2]));
+                        while ($chkFiles = $chkCheck->fetch()) {
+                            exec(ProxyCheck::$extraProgram . $fileForDate[2]);
+                        }
+                    }
+                    fclose($logLine);
+                }
+            }
+        }
+
+        $thisDatetime = date("Y-m-d H:i", strtotime("+30 minutes"));
+        $thisDate = array("0" => $thisDatetime,
+                          "1" => date($thisDatetime, strtotime("-30 minutes")));
+
+    }
+
+
+
     // 檢查排程, 如果proxy都沒有就跳過
     if ($allProxyStatus == 'proxy_nice') {
+
         $schedule = $SQL->getSchedule();
         $proxyServer = new ProxyCheck();
 
@@ -129,6 +162,10 @@ do {
                 $updFile = "log/server/server::" . $arrID;
                 $sGroup = $SQL->getScheduleGroup($arrID);
 
+                if (file_exists("log/run/" . $arrID)) {
+                    break;
+                }
+
                 if (file_exists($updFile)) {
                     $updateSchedule = fopen($updFile, "r");
                     $updLine = fgets($updateSchedule);
@@ -138,6 +175,9 @@ do {
                     $updLine = fgets($updateSchedule);
                     fclose($updateSchedule);
                 }
+
+                // get schedule id, project id
+
 
                 if ($updLine  == '' || $updLine == 'finish' || $updLine == 'not_exist') {
                     $time = $arrRow['time'];
@@ -229,8 +269,8 @@ do {
                             $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg1); $i++) {
                                 $out = explode(" ", $runPrg1[$i]);
-                                $proxyStatus = $SQL->getProjectStatus(trim($out[2]));
-                                if ($proxyStatus != 'working') {
+                                $projectStatus = $SQL->getProjectStatus(trim($out[2]));
+                                if ($projectStatus != 'working') {
                                     $SQL->updateProjectStatus(trim($out[2]), "working");
                                     exec($runPrg1[$i] . " > /dev/null &");
                                 }
@@ -243,8 +283,8 @@ do {
                             $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg2); $i++) {
                                 $out = explode(" ", $runPrg2[$i]);
-                                $proxyStatus = $SQL->getProjectStatus(trim($out[2]));
-                                if ($proxyStatus != 'working') {
+                                $projectStatus = $SQL->getProjectStatus(trim($out[2]));
+                                if ($projectStatus != 'working') {
                                     $SQL->updateProjectStatus(trim($out[2]), "working");
                                     exec($runPrg2[$i] . " > /dev/null &");
                                 }
@@ -257,8 +297,8 @@ do {
                             $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg3); $i++) {
                                 $out = explode(" ", $runPrg3[$i]);
-                                $proxyStatus = $SQL->getProjectStatus(trim($out[2]));
-                                if ($proxyStatus != 'working') {
+                                $projectStatus = $SQL->getProjectStatus(trim($out[2]));
+                                if ($projectStatus != 'working') {
                                     $SQL->updateProjectStatus(trim($out[2]), "working");
                                     exec($runPrg3[$i] . " > /dev/null &");
                                 }
@@ -267,22 +307,20 @@ do {
                             fclose($fp);
                         }
 
-
-
                         $updateSchedule = fopen("log/server/server::" . $arrID, "w+");
                         fwrite($updateSchedule, "work");
                         fclose($updateSchedule);
+
+                        copy('log/' . $arrID . ".log", 'log/run/' . $arrID);
                     }
-
                 }
-
             }
         }
-
     }
 
     // 讀取日誌檔案
     $logDir = "log/server/";
+    $logDir2 = "log/run/";
     $files = scandir($logDir);
     foreach ($files as $fileName) {
         if ($fileName != "." && $fileName != "..") {
@@ -305,18 +343,25 @@ do {
                         exec("ps aux | grep '$cmdLine' | awk '{print $9}' | xargs", $output);
 
                         // 檢查是否逾時
-                        if (count($output) > 0) {
+                        if (trim($output[0]) != '') {
                             $timeDiff = $SQL->dateDifference("n", $output[0] . ":00", date("H:i:s"));
+                            $timeDiff = abs($timeDiff);
+//                            echo $output[0] . " " . date("H:i:s") . chr(10);
                             if (!empty($output[0]) && ($timeDiff >= ProxyCheck::$chkTime)) {
                                 $cmdFile = explode(" ", $cmdLine);
+                                $runProgram = $cmdFile[2];
+
+                                $SQL->updateProjectStatus($runProgram, 'fail');
+                                $SQL->updateCrawlerTimeOut($runProgram);
+
                                 $errLog = fopen("log/error.log", "w+");
                                 $errorMsg = $cmdFile[2] .
                                     " 執行由 " . $output[0] . ":00" . " 已經超過" . (ProxyCheck::$chkTime / 60) . "小時";
                                 fputs($errLog, $errorMsg);
                                 fclose($errLog);
                                 exec("ps aux | grep '$cmdLine' | awk '{print $2}' | xargs kill -9");
-
-                                Mailer::$subject = $errorMsg;
+                                Mailer::$msg = $errLog;
+                                Mailer::$subject = Mailer::$msg;
                                 $mail = new Mailer();
                                 $mail->mailSend();
                             }
@@ -326,6 +371,7 @@ do {
                         if (empty($output[0])) {
                             if (file_exists($logDir . "/" . $fileName)) {
                                 unlink($logDir . "/" . $fileName);
+                                unlink($logDir2 . "/" . $logFile[1]);
                             }
                         }
                     }
