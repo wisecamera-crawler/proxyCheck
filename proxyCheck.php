@@ -84,7 +84,9 @@ do {
 
     // every 30 minutes check
     $thisDate = array("0" => $thisDatetime,
-                      "1" => date($thisDatetime, strtotime("-30 minutes")));
+                      "1" => date("Y-m-d H:i", strtotime($thisDatetime) - (30*60)));
+
+    //echo $thisDate[0] . " " . $thisDate[1] . chr(10);
 
     if (date("Y-m-d H:i") == $thisDate[0]) {
 
@@ -96,14 +98,17 @@ do {
                 && $checkFile != 'proxy' && $checkFile != 'run' && $checkFile != 'server') {
                 $fileTime = date("Y-m-d H:i", filemtime(dirname(__FILE__) ."/" .$log . "/" . $checkFile));
 
-                if ($thisDate2 <= $fileTime && date("Y-m-d H:s") >= $fileTime) {
+                if ($thisDate[1] <= $fileTime && $thisDate[0] >= $fileTime) {
                     $logLine = fopen($log . "/" . $checkFile, "r");
                     while (!feof($logLine)) {
                         $logToLine = fgets($logLine);
                         $fileForDate = explode(" ", $logToLine);
                         $chkCheck = $SQL->getProjectStatus(trim($fileForDate[2]));
+
                         while ($chkFiles = $chkCheck->fetch()) {
-                            exec(ProxyCheck::$extraProgram . $fileForDate[2]);
+                            if ($chkFiles['status'] != 'working') {
+                                exec(ProxyCheck::$extraProgram . $fileForDate[2]);
+                            }
                         }
                     }
                     fclose($logLine);
@@ -113,10 +118,9 @@ do {
 
         $thisDatetime = date("Y-m-d H:i", strtotime("+30 minutes"));
         $thisDate = array("0" => $thisDatetime,
-                          "1" => date($thisDatetime, strtotime("-30 minutes")));
+                          "1" => date("Y-m-d H:i", strtotime("-30 minutes")));
 
     }
-
 
 
     // 檢查排程, 如果proxy都沒有就跳過
