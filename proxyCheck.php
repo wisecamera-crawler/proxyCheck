@@ -44,14 +44,18 @@ do {
 
                 if ($thisDate[1] <= $fileTime && $thisDate[0] >= $fileTime) {
                     $logLine = fopen($log . "/" . $checkFile, "r");
+
                     while (!feof($logLine)) {
                         $logToLine = fgets($logLine);
                         $fileForDate = explode(" ", $logToLine);
-                        $chkCheck = $SQL->getProjectStatus(trim($fileForDate[2]));
-                        while ($chkFiles = $chkCheck->fetch()) {
-                            if ($chkFiles['status'] != 'working'
-                                && (($thisDate[0] <= $chkFiles['last_update']) && $thisDate[1] >= $chkFiles['last_update'])) {
-                                exec(ProxyCheck::$extraProgram . $fileForDate[2]);
+                        if (!empty($fileForDate[0])) {
+                            $chkCheck = $SQL->getProjectStatus(trim($fileForDate[2]));
+                            while ($chkFiles = $chkCheck->fetch()) {
+                                if ($chkFiles['status'] != 'working'
+                                    && (($thisDate[0] <= $chkFiles['last_update']) && $thisDate[1] >= $chkFiles['last_update'])) {
+                                    $SQL->updateProjectStatus('working', $fileForDate[2]);
+                                    exec(ProxyCheck::$extraProgram . $fileForDate[2]);
+                                }
                             }
                         }
                     }
@@ -164,10 +168,10 @@ do {
             while ($arrRow = $result->fetch()) {
                 // status is empty or finish
                 $arrID = $arrRow['schedule_id'];
-                $updFile = "log/server/server::" . $arrID;
+                $updFile = "log/run/server/server::" . $arrID;
                 $sGroup = $SQL->getScheduleGroup($arrID);
 
-                if (file_exists("log/run/" . $arrID)) {
+                if (file_exists("log/run/" . $arrID . '.log')) {
                     break;
                 }
 
@@ -263,15 +267,15 @@ do {
                     if (count($runPrg1) == 0 && count($runPrg2) == 0 && count($runPrg3) == 0) {
 
                         // not schedule project
-                        $updateSchedule = fopen("log/server/server::" . $arrID, "w+");
+                        $updateSchedule = fopen("log/run/server/server::" . $arrID, "w+");
                         fwrite($updateSchedule, "not_exist");
                         fclose($updateSchedule);
 
                     } else {
 
                         // schedule project
+                        $fp = fopen("log/" . $arrID . ".log", "w+");
                         if (count($runPrg1) > 0) {
-                            $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg1); $i++) {
                                 $out = explode(" ", $runPrg1[$i]);
                                 $projectStatus = $SQL->getProjectStatus(trim($out[2]));
@@ -281,11 +285,9 @@ do {
                                 }
                                 fputs($fp, $runPrg1[$i] . chr(10));
                             }
-                            fclose($fp);
                         }
 
                         if (count($runPrg2) > 0) {
-                            $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg2); $i++) {
                                 $out = explode(" ", $runPrg2[$i]);
                                 $projectStatus = $SQL->getProjectStatus(trim($out[2]));
@@ -295,7 +297,6 @@ do {
                                 }
                                 fputs($fp, $runPrg2[$i] . chr(10));
                             }
-                            fclose($fp);
                         }
 
                         if (count($runPrg3) > 0) {
@@ -309,14 +310,17 @@ do {
                                 }
                                 fputs($fp, $runPrg3[$i] . chr(10));
                             }
-                            fclose($fp);
                         }
 
-                        $updateSchedule = fopen("log/server/server::" . $arrID, "w+");
+                        fclose($fp);
+
+                        $updateSchedule = fopen("log/run/server/server::" . $arrID, "w+");
                         fwrite($updateSchedule, "work");
                         fclose($updateSchedule);
 
-                        copy('log/' . $arrID . ".log", 'log/run/' . $arrID);
+                        @mkdir("log/server/" . $arrID ."/");
+
+                        copy('log/' . $arrID . ".log", 'log/run/' . $arrID . ".log");
                     }
                 }
             }
@@ -324,68 +328,88 @@ do {
     }
 
     // 讀取日誌檔案
-    $logDir = "log/server/";
+    $logDir = "log/run/server/";
     $logDir2 = "log/run/";
     $files = scandir($logDir);
+
     foreach ($files as $fileName) {
         if ($fileName != "." && $fileName != "..") {
 
-            $logFile = explode("::", $fileName);
+            if (substr($fileName,0 ,6) == "server") {
 
-            $fileLog = fopen($logDir . $fileName, "r");
-            $fileLogLine = fgets($fileLog);
-            fclose($fileLog);
+                $getLog = explode("::", $fileName);
 
-            if ($fileLogLine == "work") {
-                $fp = fopen("log/" . $logFile[1] . ".log", "r");
-                while (!feof($fp)) {
-                    $cmdLine = fgets($fp);
-                    $output = array();
-                    if (trim($cmdLine) != "") {
-                        $cmdLine = trim($cmdLine);
-                        $cmdLine =  substr_replace($cmdLine, "[p]", 0, 1);
-                        exec("ps aux | grep '$cmdLine' | awk '{print $2}' | xargs");
-                        exec("ps aux | grep '$cmdLine' | awk '{print $9}' | xargs", $output);
+                $fileLog = fopen($logDir . "/" . $fileName, "r");
+                $fileLogLine = fgets($fileLog);
+                fclose($fileLog);
 
-                        // 檢查是否逾時
-                        if (trim($output[0]) != '') {
-                            $timeDiff = $SQL->dateDifference("n", $output[0] . ":00", date("H:i:s"));
-                            $timeDiff = abs($timeDiff);
-//                            echo $output[0] . " " . date("H:i:s") . chr(10);
-                            if (!empty($output[0]) && ($timeDiff >= ProxyCheck::$chkTime)) {
-                                $cmdFile = explode(" ", $cmdLine);
-                                $runProgram = $cmdFile[2];
+                if ($fileLogLine == 'work') {
+                    $fp = fopen('log/' . $getLog[1] . ".log", "r");
+                    while (!feof($fp)) {
+                        $cmdLine = fgets($fp);
+                        $outLine = array();
 
-                                $SQL->updateProjectStatus($runProgram, 'fail');
-                                $SQL->updateCrawlerTimeOut($runProgram);
+                        if (trim($cmdLine) != '') {
+                            $cmdLine = trim($cmdLine);
+                            $cmdLine =  substr_replace($cmdLine, "[p]", 0, 1);
+                            $cmdRun = explode(" ", $cmdLine);
+                            exec("ps aux | grep '$cmdLine' | awk '{print $2}' | xargs");
+                            exec("ps aux | grep '$cmdLine' | awk '{print $9}' | xargs", $outLine);
 
-                                $errLog = fopen("log/error.log", "w+");
-                                $errorMsg = $cmdFile[2] .
-                                    " 執行由 " . $output[0] . ":00" . " 已經超過" . (ProxyCheck::$chkTime / 60) . "小時";
-                                fputs($errLog, $errorMsg);
-                                fclose($errLog);
-                                exec("ps aux | grep '$cmdLine' | awk '{print $2}' | xargs kill -9");
-                                Mailer::$msg = $errLog;
-                                Mailer::$subject = Mailer::$msg;
-                                $mail = new Mailer();
-                                $mail->mailSend();
-                            }
-                        }
 
-                        // 沒有錯誤則表示finish
-                        if (empty($output[0])) {
-                            if (file_exists($logDir . "/" . $fileName)) {
-                                unlink($logDir . "/" . $fileName);
-                                unlink($logDir2 . "/" . $logFile[1]);
+                            if (trim($outLine[0]) != '') {
+                                $outLineExplode = explode(" ", $outLine[0]);
+
+                                $timeDiff = $SQL->dateDifference("n", $outLineExplode[0] . ":00", date("H:i:s"));
+                                //echo "[" . $outLineExplode[0] . ":00" . ' ' . date("H:i:s") . "]" . chr(10);
+                                if (!empty($outLineExplode[0]) && ($timeDiff >= ProxyCheck::$chkTime)) {
+                                    $cmdFile = explode(" ", $cmdLine);
+                                    $runProgram = $cmdFile[2];
+
+                                    $SQL->updateProjectStatus($runProgram, 'fail');
+                                    $SQL->updateCrawlerTimeOut($runProgram);
+
+                                    $errLog = fopen("log/error.log", "w+");
+                                    $errorMsg = $cmdFile[2] .
+                                        " 執行由 " . $output[0] . ":00" . " 已經超過" . (ProxyCheck::$chkTime / 60) . "小時";
+                                    fputs($errLog, $errorMsg);
+                                    fclose($errLog);
+
+                                    $updateSchedule = fopen("log/server/" . $getLog[1] . "/" . $cmdRun[2], "w+");
+                                    fwrite($updateSchedule, "time_out");
+                                    fclose($updateSchedule);
+
+                                    exec("ps aux | grep '$cmdLine' | awk '{print $2}' | xargs kill -9");
+                                    Mailer::$msg = $errLog;
+                                    Mailer::$subject = Mailer::$msg;
+                                    $mail = new Mailer();
+                                    $mail->mailSend();
+                                }
                             }
                         }
                     }
+                    fclose($fp);
+
+                     //沒有錯誤則表示finish
+                    if (empty($output[0])) {
+                        echo "finish" . chr(10);
+                        $updateSchedule = fopen("log/server/" . $getLog[1] . "/" . $cmdRun[2], "w+");
+                        fwrite($updateSchedule, "finish");
+                        fclose($updateSchedule);
+
+                        if (file_exists($logDir . "/" . $fileName)) {
+
+                            unlink($logDir . "/" . $fileName);
+                            unlink($logDir2 . "/" . $getLog[1] . ".log");
+                        }
+                    }
                 }
-                fclose($fp);
             }
 
-        };
+        }
+
     }
+
 
 
     sleep(1);
