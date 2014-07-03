@@ -63,8 +63,9 @@ do {
                                 if ($chkFiles['status'] != 'working'
                                     && (($thisDate[0] <= $chkFiles['last_update']) && $thisDate[1] >= $chkFiles['last_update'])) {
                                     $SQL->updateProjectStatus('working', $fileForDate[2]);
-
-                                    echo $fileForDate[2] . ' working' . chr(10);
+                                    $updateFileLog = fopen('rerun.log', 'a+');
+                                    fputs($updateFileLog, $fileForDate[2] . " " . date('Y-m-d H:i') . " is rerun." );
+                                    fclose($updateFileLog);
                                     exec(ProxyCheck::$extraProgram . $fileForDate[2]);
                                 }
                             }
@@ -403,7 +404,7 @@ do {
 
                      //沒有錯誤則表示finish
                     if (empty($output[0])) {
-                        $updateSchedule = fopen("log/server/" . $getLog[1] . "/" . $cmdRun[2], "a+");
+                        $updateSchedule = fopen("log/server/" . $getLog[1] . "/" . $cmdRun[2], "w+");
                         fwrite($updateSchedule, "finish" . chr(10));
                         fclose($updateSchedule);
 
