@@ -24,8 +24,15 @@ $SQL = new ProxySQLService();
 $Proxy = new ProxyCheck();
 $check = 0;
 $thisDatetime = date("Y-m-d H:i");
-@mkdir('log/run');
-@mkdir('log/run/server');
+$logFolder = "log/run";
+$logFolder2 = "log/run/server";
+if (!is_dir($logFolder)) {
+    mkdir($logFolder);
+}
+if (!is_dir($logFolder2)) {
+    mkdir($logFolder2);
+}
+
 
 do {
 
