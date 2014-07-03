@@ -63,6 +63,8 @@ do {
                                 if ($chkFiles['status'] != 'working'
                                     && (($thisDate[0] <= $chkFiles['last_update']) && $thisDate[1] >= $chkFiles['last_update'])) {
                                     $SQL->updateProjectStatus('working', $fileForDate[2]);
+
+                                    echo $fileForDate[2] . ' working' . chr(10);
                                     exec(ProxyCheck::$extraProgram . $fileForDate[2]);
                                 }
                             }
@@ -378,10 +380,10 @@ do {
                                     $SQL->updateProjectStatus($runProgram, 'fail');
                                     $SQL->updateCrawlerTimeOut($runProgram);
 
-                                    $errLog = fopen("log/error.log", "w+");
+                                    $errLog = fopen("log/error.log", "a+");
                                     $errorMsg = $cmdFile[2] .
                                         " 執行由 " . $output[0] . ":00" . " 已經超過" . (ProxyCheck::$chkTime / 60) . "小時";
-                                    fputs($errLog, $errorMsg);
+                                    fputs($errLog, $errorMsg . chr(10));
                                     fclose($errLog);
 
                                     $updateSchedule = fopen("log/server/" . $getLog[1] . "/" . $cmdRun[2], "w+");
@@ -401,9 +403,8 @@ do {
 
                      //沒有錯誤則表示finish
                     if (empty($output[0])) {
-                        echo "finish" . chr(10);
-                        $updateSchedule = fopen("log/server/" . $getLog[1] . "/" . $cmdRun[2], "w+");
-                        fwrite($updateSchedule, "finish");
+                        $updateSchedule = fopen("log/server/" . $getLog[1] . "/" . $cmdRun[2], "a+");
+                        fwrite($updateSchedule, "finish" . chr(10));
                         fclose($updateSchedule);
 
                         if (file_exists($logDir . "/" . $fileName)) {
