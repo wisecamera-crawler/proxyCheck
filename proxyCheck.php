@@ -24,6 +24,8 @@ $SQL = new ProxySQLService();
 $Proxy = new ProxyCheck();
 $check = 0;
 $thisDatetime = date("Y-m-d H:i");
+@mkdir('log/run');
+@mkdir('log/run/server');
 
 do {
 
