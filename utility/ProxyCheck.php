@@ -156,5 +156,4 @@ class ProxyCheck
         curl_multi_close($mh);
         return $res;
     }
-
 }

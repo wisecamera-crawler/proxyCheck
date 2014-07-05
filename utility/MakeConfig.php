@@ -32,7 +32,14 @@ namespace utility;
      */
 class MakeConfig
 {
-    function Make() {
+    /**
+     * Config setting
+     *
+     * @category  Utility
+     * @return    sch_type
+     */
+    public function make()
+    {
         exec("env | grep 'HOME='", $homeOutput);
         for ($i = 0; $i < count($homeOutput); $i++) {
             $selfHome = explode("=", $homeOutput[$i]);

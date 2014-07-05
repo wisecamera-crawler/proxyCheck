@@ -10,7 +10,7 @@ use utility\ProxyCheck;
 use utility\ProxySQLService;
 
 $makeConfig = new MakeConfig();
-$makeConfig->Make();
+$makeConfig->make();
 
 exec("ps aux | grep '[p]hp proxyCheck.php' | awk '{print $2}' | xargs", $firstCmd);
 $firstRun = explode(" ", $firstCmd[0]);
@@ -361,7 +361,6 @@ do {
 
     foreach ($files as $fileName) {
         if ($fileName != "." && $fileName != "..") {
-            echo $fileName . chr(10);
             if (substr($fileName, 0, 6) == "server") {
 
                 $getLog = explode("::", $fileName);
