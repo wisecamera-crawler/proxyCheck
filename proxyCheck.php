@@ -461,8 +461,8 @@ do {
                     fputs($logRun, "finish");
                     fclose($logRun);
 
-                    unlink($logDir . '/' . $fileName);
-                    unlink($logDir2 . '/' . $getLog[1] . ".log");
+                    @unlink($logDir . '/' . $fileName);
+                    @unlink($logDir2 . '/' . $getLog[1] . ".log");
                 }
             }
 
