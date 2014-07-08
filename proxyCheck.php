@@ -40,19 +40,22 @@ if (!is_dir($logSaveFolder)) {
 
 do {
 
-    // every 30 minutes check
+    // every 30 minutes to run
     $thisDate = array("0" => $thisDatetime,
-                      "1" => date("Y-m-d H:i", strtotime($thisDatetime) - (30*60)));
+        "1" => date("Y-m-d H:i", strtotime($thisDatetime) - (30*60)));
 
     if (date("Y-m-d H:i") == $thisDate[0]) {
         $log = "log/";
         $logPath = scandir($log);
 
         foreach ($logPath as $checkFile) {
-            if ($checkFile != "." && $checkFile != ".."
-                && $checkFile != 'proxy' && $checkFile != 'run'
-                && $checkFile != 'server' && $checkFile != "error.log"
-                && $checkFile != '.DS_Store') {
+            if ($checkFile != "." && $checkFile != "..") {
+
+                $chkFile = explode(".", $checkFile);
+                if (!is_numeric($chkFile[0])) {
+                    break;
+                }
+
                 $fileTime = date("Y-m-d H:i", filemtime(dirname(__FILE__) ."/" . $log . "/" . $checkFile));
 
                 if ($thisDate[1] <= $fileTime && $thisDate[0] >= $fileTime) {
@@ -63,16 +66,16 @@ do {
                         $fileForDate = explode(" ", $logToLine);
                         if (!empty($fileForDate[0])) {
                             $chkCheck = $SQL->getProjectStatus(trim($fileForDate[2]));
-                            while ($chkFiles = $chkCheck->fetch()) {
-                                if ($chkFiles['status'] != 'working'
-                                    && (($thisDate[0] <= $chkFiles['last_update'])
-                                    && $thisDate[1] >= $chkFiles['last_update'])) {
-                                    $SQL->updateProjectStatus('working', $fileForDate[2]);
-                                    $updateFileLog = fopen('rerun.log', 'a+');
-                                    fputs($updateFileLog, $fileForDate[2] . " " . date('Y-m-d H:i') . " is rerun.");
-                                    fclose($updateFileLog);
-                                    exec(ProxyCheck::$extraProgram . $fileForDate[2]);
-                                }
+
+                            if ($chkCheck['status'] != 'working'
+                                && (($thisDate[0] <= $chkCheck['last_update'])
+                                    && $thisDate[1] >= $chkCheck['last_update'])) {
+                                $SQL->updateProjectStatus('working', $fileForDate[2]);
+                                $updateFileLog = fopen('rerun.log', 'a+');
+                                fputs($updateFileLog, $fileForDate[2] . " " . date('Y-m-d H:i') . " is rerun.");
+                                fclose($updateFileLog);
+                                echo $fileForDate[2] . " " . date('Y-m-d H:i') . " is rerun." . chr(10);
+                                exec(ProxyCheck::$extraProgram . $fileForDate[2]);
                             }
                         }
                     }
@@ -84,10 +87,9 @@ do {
 
         $thisDatetime = date("Y-m-d H:i", strtotime("+30 minutes"));
         $thisDate = array("0" => $thisDatetime,
-                          "1" => date("Y-m-d H:i", strtotime("-30 minutes")));
+            "1" => date("Y-m-d H:i", strtotime("-30 minutes")));
 
     }
-
 
     // Proxy Server 檢查
     $proxyServer = $SQL->getProxyId();
@@ -294,6 +296,10 @@ do {
 
 
                     } else {
+                        $fp = fopen("log/" . $arrID . ".log", "w+");
+                        fputs($fp, '');
+                        fclose($fp);
+                        $fileTime = date("Y-m-d H:i", filemtime(dirname(__FILE__). "/log/" . $arrID . ".log"));
 
                         // schedule project
                         $fp = fopen("log/" . $arrID . ".log", "w+");
@@ -301,9 +307,11 @@ do {
                             for ($i=0; $i < count($runPrg1); $i++) {
                                 $out = explode(" ", $runPrg1[$i]);
                                 $projectStatus = $SQL->getProjectStatus(trim($out[2]));
-                                if ($projectStatus != 'working') {
-                                    $SQL->updateProjectStatus(trim($out[2]), "working");
-                                    exec($runPrg1[$i] . " > /dev/null &");
+                                if ($projectStatus['status'] != 'working') {
+                                    if ($projectStatus['last_update'] < $fileTime) {
+                                        $SQL->updateProjectStatus(trim($out[2]), "working");
+                                        exec($runPrg1[$i] . " > /dev/null &");
+                                    }
                                 }
                                 fputs($fp, $runPrg1[$i] . chr(10));
                                 fputs($logStart, $runPrg1[$i] . chr(10));
@@ -314,9 +322,11 @@ do {
                             for ($i=0; $i < count($runPrg2); $i++) {
                                 $out = explode(" ", $runPrg2[$i]);
                                 $projectStatus = $SQL->getProjectStatus(trim($out[2]));
-                                if ($projectStatus != 'working') {
-                                    $SQL->updateProjectStatus(trim($out[2]), "working");
-                                    exec($runPrg2[$i] . " > /dev/null &");
+                                if ($projectStatus['status'] != 'working') {
+                                    if ($projectStatus['last_update'] < $fileTime) {
+                                        $SQL->updateProjectStatus(trim($out[2]), "working");
+                                        exec($runPrg2[$i] . " > /dev/null &");
+                                    }
                                 }
                                 fputs($fp, $runPrg2[$i] . chr(10));
                                 fputs($logStart, $runPrg2[$i] . chr(10));
@@ -324,13 +334,14 @@ do {
                         }
 
                         if (count($runPrg3) > 0) {
-                            $fp = fopen("log/" . $arrID . ".log", "w+");
                             for ($i=0; $i < count($runPrg3); $i++) {
                                 $out = explode(" ", $runPrg3[$i]);
                                 $projectStatus = $SQL->getProjectStatus(trim($out[2]));
-                                if ($projectStatus != 'working') {
-                                    $SQL->updateProjectStatus(trim($out[2]), "working");
-                                    exec($runPrg3[$i] . " > /dev/null &");
+                                if ($projectStatus['status'] != 'working') {
+                                    if ($projectStatus['last_update'] < $fileTime) {
+                                        $SQL->updateProjectStatus(trim($out[2]), "working");
+                                        exec($runPrg3[$i] . " > /dev/null &");
+                                    }
                                 }
                                 fputs($fp, $runPrg3[$i] . chr(10));
                                 fputs($logStart, $runPrg3[$i] . chr(10));
@@ -387,6 +398,7 @@ do {
                                 $fileTime = date("Y-m-d H:i", $fileRealTime);
                                 $timeDiff = $SQL->dateDifference("n", $fileTime, date("Y-m-d H:i"));
                                 if (!empty($fileTime) && ($timeDiff >= ProxyCheck::$chkTime)) {
+                                    echo $timeDiff . chr(10);
                                     $cmdFile = explode(" ", $cmdLine);
                                     $runProgram = $cmdFile[2];
 
@@ -394,7 +406,7 @@ do {
                                     $SQL->updateCrawlerTimeOut($runProgram);
 
                                     $errLog = fopen("log/error.log", "a+");
-                                    $errorMsgFirst = " 執行由 " . $fileTime . "~" . date("Y-m-d H:i") . " 已經超過";
+                                    $errorMsgFirst = " 執行由" . $fileTime . "~" . date("Y-m-d H:i") . "已超過";
                                     $errorMsg = $cmdFile[2] . $errorMsgFirst . (ProxyCheck::$chkTime / 60) . "小時";
                                     fputs($errLog, $errorMsg . chr(10));
                                     fclose($errLog);
@@ -450,6 +462,7 @@ do {
                     fclose($logRun);
 
                     unlink($logDir . '/' . $fileName);
+                    unlink($logDir2 . '/' . $getLog[1] . ".log");
                 }
             }
 

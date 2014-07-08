@@ -497,7 +497,7 @@ class ProxySQLService
             "
         );
 
-        return $result;
+        return $result->fetch();
     }
 
     /**
@@ -522,9 +522,27 @@ class ProxySQLService
               WHERE `project_id` = '$projectID'
             "
         );
-
     }
 
+    /**
+     * Project's status
+     *
+     * @param string $projectID project's id
+     *
+     * @category  Utility
+     * @return    sch_type
+     */
+    public function getCrawlerStatus($projectID)
+    {
+        $result = $this->conn->query(
+            "SELECT `endtime`
+               FROM `crawler_status`
+              WHERE `project_id` = '$projectID'
+            "
+        );
+
+        return $result->fetch();
+    }
 
     /**
      * Date difference
