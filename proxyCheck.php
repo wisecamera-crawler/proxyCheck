@@ -380,7 +380,7 @@ do {
                 $fileLogLine = fgets($fileLog);
                 fclose($fileLog);
                 if ($fileLogLine == 'work') {
-                    $fp = fopen('log/run/' . $getLog[1] . ".log", "r");
+                    $fp = fopen($logDir2 . $getLog[1] . ".log", "r");
                     while (!feof($fp)) {
                         $cmdLine = fgets($fp);
 
@@ -393,7 +393,7 @@ do {
                             exec("ps aux | grep '$cmdLine' | awk '{print $9}' | xargs", $outLine);
 
                             if (trim($outLine[0]) != '') {
-                                $logDir2File = $logDir2 . "/" . $getLog[1] . ".log";
+                                $logDir2File = $logDir2 . $getLog[1] . ".log";
                                 $fileRealTime = filemtime(dirname(__FILE__) . "/" . $logDir2File);
                                 $fileTime = date("Y-m-d H:i", $fileRealTime);
                                 $timeDiff = $SQL->dateDifference("n", $fileTime, date("Y-m-d H:i"));
@@ -431,7 +431,7 @@ do {
                     fclose($fp);
 
 
-                    $updateSchedule = fopen($logDir2 . '/' . $getLog[1] . ".log", "r");
+                    $updateSchedule = fopen($logDir2 . $getLog[1] . ".log", "r");
                     $checkRun = "finish";
                     while (!feof($updateSchedule)) {
                         $updateLine = fgets($updateSchedule);
@@ -446,11 +446,11 @@ do {
                     fclose($updateSchedule);
 
                     if ($checkRun == 'finish') {
-                        if (file_exists($logDir . "/" . $fileName)) {
-                            $updateSchedule = fopen($logDir . '/' . $fileName, "w+");
+                        if (file_exists($logDir . $fileName)) {
+                            $updateSchedule = fopen($logDir . $fileName, "w+");
                             fwrite($updateSchedule, "finish" . chr(10));
                             fclose($updateSchedule);
-                            unlink($logDir2 . "/" . $getLog[1] . ".log");
+                            @unlink($logDir2 . $getLog[1] . ".log");
                         }
                     }
 
