@@ -462,7 +462,7 @@ do {
                     fclose($logRun);
 
                     @unlink($logDir . '/' . $fileName);
-                    @unlink($logDir2 . '/' . $getLog[1] . ".log");
+
                 }
             }
 
