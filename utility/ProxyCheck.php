@@ -122,6 +122,7 @@ class ProxyCheck
             curl_multi_add_handle($mh, $curl_array[$i]);
         }
 
+        // 防止CPU負荷過載
         $running = null;
         do {
             usleep(10000);

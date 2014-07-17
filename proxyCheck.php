@@ -128,20 +128,19 @@ do {
         fclose($fp);
     }
 
-    $allProxyStatus = $SQL->getAllProxyStatus();
+    $allProxyStatus = $SQL->proxyStatus();
 
     if ($allProxyStatus == "proxy_error") {
-        $check ++;
+        $check++;
+        if ($check == 1) {
+            $msgAll = "偵測所有Proxy Server中斷連線";
+            $SQL->updateLog('', $msgAll);
+            Mailer::$subject = $msgAll;
+            $mail = new Mailer();
+            $mail->mailSend();
+        }
     } else {
         $check = 0;
-    }
-
-    if ($allProxyStatus == "proxy_error" && $check == 1) {
-        $msgAll = "偵測所有Proxy Server中斷連線";
-        $SQL->updateLog('', $msgAll);
-        Mailer::$subject = $msgAll;
-        $mail = new Mailer();
-        $mail->mailSend();
     }
 
     // check proxy ending
@@ -157,23 +156,18 @@ do {
 
             if ($rows['sch_type'] == "one_time") {
                 $theDate = date('Y-m-d H:i:00');
-
                 $result = $SQL->getScheduleParam(
                     "`sch_type` = 'one_time'
                     AND `time` = '" . $theDate . "'"
                 );
-            }
-
-            if ($rows['sch_type'] == "daily") {
+            } elseif ($rows['sch_type'] == "daily") {
                 $theDate = date("H:i:00");
 
                 $result = $SQL->getScheduleParam(
                     "`sch_type` = 'daily'
                     AND `time` = '2012-01-01 " . $theDate . "'"
                 );
-            }
-
-            if ($rows['sch_type'] == "weekly") {
+            } elseif ($rows['sch_type'] == "weekly") {
                 $theDate = date("H:i:00");
 
                 $result = $SQL->getScheduleParam(
@@ -194,20 +188,9 @@ do {
                     break;
                 }
 
-                if (file_exists($updFile)) {
-                    $updateSchedule = fopen($updFile, "r");
-                    $updLine = fgets($updateSchedule);
-                    fclose($updateSchedule);
-                } else {
-                    $updateSchedule = fopen($updFile, "w+");
-                    $updLine = fgets($updateSchedule);
-                    fclose($updateSchedule);
-                }
-
                 // get schedule id, project id
 
                 $logStart = fopen("log/save/" . $arrID . "_run_" . date('Ymd-His') .  ".log", "a+");
-
 
                 if ($updLine  == '' || $updLine == 'finish' || $updLine == 'not_exist') {
                     $time = $arrRow['time'];
@@ -227,7 +210,6 @@ do {
                                 $type[] = 'group';
                                 $runVar['group'] = "`type` = '" . $sGRow['member'] . "'";
                             }
-
                         }
 
                         if ($sGRow['type'] == 'project') {
@@ -403,7 +385,7 @@ do {
                                     $runProgram = $cmdFile[2];
 
                                     $SQL->updateProjectStatus($runProgram, 'fail');
-                                    $SQL->updateCrawlerTimeOut($runProgram);
+                                    $SQL->updateCrawlerTimeOut($runProgram, $fileTime, date('Y-m-d H:i'));
 
                                     $errLog = fopen("log/error.log", "a+");
                                     $errorMsgFirst = " 執行由" . $fileTime . "~" . date("Y-m-d H:i") . "已超過";

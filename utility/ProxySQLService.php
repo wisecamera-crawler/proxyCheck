@@ -70,7 +70,7 @@ class ProxySQLService
      */
     public function getProxyId()
     {
-        $proxtSvr = array();
+        $proxySvr = array();
         $result = $this->conn->query(
             "SELECT `proxy_ip`, `proxy_port`
                FROM `proxy`
@@ -78,10 +78,10 @@ class ProxySQLService
         );
 
         while ($rows = $result->fetch()) {
-            array_push($proxtSvr, $rows['proxy_ip'] . ":" . $rows['proxy_port']);
+            array_push($proxySvr, $rows['proxy_ip'] . ":" . $rows['proxy_port']);
         }
 
-        return $proxtSvr;
+        return $proxySvr;
     }
 
     /**
@@ -90,23 +90,16 @@ class ProxySQLService
      * @category  Utility
      * @return    proxy's nice or error
      */
-    public function getAllProxyStatus()
+    public function proxyStatus()
     {
-        $result01 = $this->conn->query(
-            "SELECT count(*) FROM `proxy`"
-        );
-
-        $result02 = $this->conn->query(
+        $result = $this->conn->query(
             "SELECT `proxy_ip`,
                     `proxy_port`,
                     `status`
                FROM `proxy`"
         );
 
-        $rows = $result01->fetchAll();
-        $rowsCount = count($rows);
-
-        while ($row = $result02->fetch()) {
+        while ($row = $result->fetch()) {
             $status = 'proxy_error';
             if ($row['status'] == 'on-line') {
                 $status = 'proxy_nice';
@@ -267,7 +260,7 @@ class ProxySQLService
      * @param string $param give a param
      *
      * @category  Utility
-     * @return    email
+     * @return    schedule with parameters
      */
     public function getScheduleParam($param)
     {
@@ -504,22 +497,25 @@ class ProxySQLService
      * Project's status
      *
      * @param string $projectID project's id
-     *
+     * @param string $startTime project's start time
+     * @param string $endTime   project's end time
      * @category  Utility
      * @return    sch_type
      */
-    public function updateCrawlerTimeOut($projectID)
+    public function updateCrawlerTimeOut($projectID, $startTime, $endTime)
     {
         $timeOut = 'time_out';
 
         $this->conn->query(
-            "INSERT INTO `crawler_status`
-                SET `status` = $$timeOut,
-                    `wiki` = $timeOut,
-                    `vcs` = $timeOut,
-                    `issue` = $timeOut,
-                    `download` = $timeOut
-              WHERE `project_id` = '$projectID'
+            "INSERT INTO `crawl_status`
+                SET `status` = '$timeOut',
+                    `wiki` = '$timeOut',
+                    `vcs` = '$timeOut',
+                    `issue` = '$timeOut',
+                    `download` = '$timeOut',
+                    `starttime` = '$startTime',
+                    `endtime` = '$endTime',
+                    `project_id` = '$projectID'
             "
         );
     }
