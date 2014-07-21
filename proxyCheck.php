@@ -192,155 +192,155 @@ do {
 
                 $logStart = fopen("log/save/" . $arrID . "_run_" . date('Ymd-His') .  ".log", "a+");
 
-                if ($updLine  == '' || $updLine == 'finish' || $updLine == 'not_exist') {
-                    $time = $arrRow['time'];
-                    $type = array();
-                    $runVar = array();
+
+                $time = $arrRow['time'];
+                $type = array();
+                $runVar = array();
 
 
-                    while ($sGRow = $sGroup->fetch()) {
-                        if ($sGRow['type'] == 'year' || $sGRow['type'] == 'group') {
+                while ($sGRow = $sGroup->fetch()) {
+                    if ($sGRow['type'] == 'year' || $sGRow['type'] == 'group') {
 
-                            if ($sGRow['member'] != 'all' && $sGRow['type'] == 'year') {
-                                $type[] = 'year';
-                                $runVar['year'] = "`year` = " . $sGRow['member'];
-                            }
-
-                            if ($sGRow['member'] != 'all' && $sGRow['type'] == 'group') {
-                                $type[] = 'group';
-                                $runVar['group'] = "`type` = '" . $sGRow['member'] . "'";
-                            }
+                        if ($sGRow['member'] != 'all' && $sGRow['type'] == 'year') {
+                            $type[] = 'year';
+                            $runVar['year'] = "`year` = " . $sGRow['member'];
                         }
 
-                        if ($sGRow['type'] == 'project') {
-                            $type[] = 'project';
-                            $runVar[] = $sGRow['member'];
+                        if ($sGRow['member'] != 'all' && $sGRow['type'] == 'group') {
+                            $type[] = 'group';
+                            $runVar['group'] = "`type` = '" . $sGRow['member'] . "'";
                         }
                     }
 
-                    $runPrg = array();
-                    $runPrg1 = array();
-                    $runPrg2 = array();
-                    $runPrg3 = array();
-                    $runExec = "";
-
-                    // all
-                    if (count($runVar) == 0) {
-                        $run = $SQL->getProjectNoParam();
-                        while ($runRows = $run->fetch()) {
-                            $runPrg1[] = ProxyCheck::$extraProgram .
-                                ((ProxyCheck::$chkType == "project") ?
-                                    $runRows['project_id'] : $runRows['url']);
-                        }
-                    }
-
-                    // project
-                    if (count($runVar) >= 1 && $type[0] == 'project') {
-                        for ($i = 0; $i < count($runVar); $i++) {
-                            $project = $SQL->getProject($runVar[$i]);
-                            $projectID = ((ProxyCheck::$chkType == "project") ?
-                                $project['project_id'] : $project['url']);
-                            $runPrg2[] = ProxyCheck::$extraProgram . $projectID;
-                        }
-
-                    }
-
-                    // year or group
-                    if (count($runVar) >= 1) {
-                        if ($type[0] == 'year' || $type[0] == 'group') {
-                            if ($type[0] == 'year') {
-                                $runPrg[] = $runVar['year'];
-                            }
-                            if ($type[0] == 'group') {
-                                $runPrg[] = $runVar['group'];
-                            } elseif (count($type) > 1 && $type[1] == 'group') {
-                                $runPrg[] = $runVar['group'];
-                            }
-                            $runExec = implode(" AND ", $runPrg);
-
-                            $prg3Result = $SQL->getProjectParam($runExec);
-                            while ($prg3Rows = $prg3Result->fetch()) {
-                                $runPrg3[] = ProxyCheck::$extraProgram .
-                                    ((ProxyCheck::$chkType == "project") ?
-                                        $prg3Rows['project_id'] : $prg3Rows['url']);
-                            }
-                        }
-                    }
-
-                    if (count($runPrg1) == 0 && count($runPrg2) == 0 && count($runPrg3) == 0) {
-
-                        // not schedule project
-                        $updateSchedule = fopen("log/run/server/server::" . $arrID, "w+");
-                        fwrite($updateSchedule, "not_exist");
-                        fclose($updateSchedule);
-
-                        fwrite($logStart, "not_exist");
-
-
-                    } else {
-                        $fp = fopen("log/" . $arrID . ".log", "w+");
-                        fputs($fp, '');
-                        fclose($fp);
-                        $fileTime = date("Y-m-d H:i", filemtime(dirname(__FILE__). "/log/" . $arrID . ".log"));
-
-                        // schedule project
-                        $fp = fopen("log/" . $arrID . ".log", "w+");
-                        if (count($runPrg1) > 0) {
-                            for ($i=0; $i < count($runPrg1); $i++) {
-                                $out = explode(" ", $runPrg1[$i]);
-                                $projectStatus = $SQL->getProjectStatus(trim($out[2]));
-                                if ($projectStatus['status'] != 'working') {
-                                    if ($projectStatus['last_update'] < $fileTime) {
-                                        $SQL->updateProjectStatus(trim($out[2]), "working");
-                                        exec($runPrg1[$i] . " > /dev/null &");
-                                    }
-                                }
-                                fputs($fp, $runPrg1[$i] . chr(10));
-                                fputs($logStart, $runPrg1[$i] . chr(10));
-                            }
-                        }
-
-                        if (count($runPrg2) > 0) {
-                            for ($i=0; $i < count($runPrg2); $i++) {
-                                $out = explode(" ", $runPrg2[$i]);
-                                $projectStatus = $SQL->getProjectStatus(trim($out[2]));
-                                if ($projectStatus['status'] != 'working') {
-                                    if ($projectStatus['last_update'] < $fileTime) {
-                                        $SQL->updateProjectStatus(trim($out[2]), "working");
-                                        exec($runPrg2[$i] . " > /dev/null &");
-                                    }
-                                }
-                                fputs($fp, $runPrg2[$i] . chr(10));
-                                fputs($logStart, $runPrg2[$i] . chr(10));
-                            }
-                        }
-
-                        if (count($runPrg3) > 0) {
-                            for ($i=0; $i < count($runPrg3); $i++) {
-                                $out = explode(" ", $runPrg3[$i]);
-                                $projectStatus = $SQL->getProjectStatus(trim($out[2]));
-                                if ($projectStatus['status'] != 'working') {
-                                    if ($projectStatus['last_update'] < $fileTime) {
-                                        $SQL->updateProjectStatus(trim($out[2]), "working");
-                                        exec($runPrg3[$i] . " > /dev/null &");
-                                    }
-                                }
-                                fputs($fp, $runPrg3[$i] . chr(10));
-                                fputs($logStart, $runPrg3[$i] . chr(10));
-                            }
-                        }
-
-                        fclose($fp);
-
-                        $updateSchedule = fopen("log/run/server/server::" . $arrID, "w+");
-                        fwrite($updateSchedule, "work");
-                        fclose($updateSchedule);
-
-                        @mkdir("log/server/" . $arrID ."/");
-
-                        copy('log/' . $arrID . ".log", 'log/run/' . $arrID . ".log");
+                    if ($sGRow['type'] == 'project') {
+                        $type[] = 'project';
+                        $runVar[] = $sGRow['member'];
                     }
                 }
+
+                $runPrg = array();
+                $runPrg1 = array();
+                $runPrg2 = array();
+                $runPrg3 = array();
+                $runExec = "";
+
+                // all
+                if (count($runVar) == 0) {
+                    $run = $SQL->getProjectNoParam();
+                    while ($runRows = $run->fetch()) {
+                        $runPrg1[] = ProxyCheck::$extraProgram .
+                            ((ProxyCheck::$chkType == "project") ?
+                                $runRows['project_id'] : $runRows['url']);
+                    }
+                }
+
+                // project
+                if (count($runVar) >= 1 && $type[0] == 'project') {
+                    for ($i = 0; $i < count($runVar); $i++) {
+                        $project = $SQL->getProject($runVar[$i]);
+                        $projectID = ((ProxyCheck::$chkType == "project") ?
+                            $project['project_id'] : $project['url']);
+                        $runPrg2[] = ProxyCheck::$extraProgram . $projectID;
+                    }
+
+                }
+
+                // year or group
+                if (count($runVar) >= 1) {
+                    if ($type[0] == 'year' || $type[0] == 'group') {
+                        if ($type[0] == 'year') {
+                            $runPrg[] = $runVar['year'];
+                        }
+                        if ($type[0] == 'group') {
+                            $runPrg[] = $runVar['group'];
+                        } elseif (count($type) > 1 && $type[1] == 'group') {
+                            $runPrg[] = $runVar['group'];
+                        }
+                        $runExec = implode(" AND ", $runPrg);
+
+                        $prg3Result = $SQL->getProjectParam($runExec);
+                        while ($prg3Rows = $prg3Result->fetch()) {
+                            $runPrg3[] = ProxyCheck::$extraProgram .
+                                ((ProxyCheck::$chkType == "project") ?
+                                    $prg3Rows['project_id'] : $prg3Rows['url']);
+                        }
+                    }
+                }
+
+                if (count($runPrg1) == 0 && count($runPrg2) == 0 && count($runPrg3) == 0) {
+
+                    // not schedule project
+                    $updateSchedule = fopen("log/run/server/server::" . $arrID, "w+");
+                    fwrite($updateSchedule, "not_exist");
+                    fclose($updateSchedule);
+
+                    fwrite($logStart, "not_exist");
+
+
+                } else {
+                    $fp = fopen("log/" . $arrID . ".log", "w+");
+                    fputs($fp, '');
+                    fclose($fp);
+                    $fileTime = date("Y-m-d H:i", filemtime(dirname(__FILE__). "/log/" . $arrID . ".log"));
+
+                    // schedule project
+                    $fp = fopen("log/" . $arrID . ".log", "w+");
+                    if (count($runPrg1) > 0) {
+                        for ($i=0; $i < count($runPrg1); $i++) {
+                            $out = explode(" ", $runPrg1[$i]);
+                            $projectStatus = $SQL->getProjectStatus(trim($out[2]));
+                            if ($projectStatus['status'] != 'working') {
+                                if ($projectStatus['last_update'] < $fileTime) {
+                                    $SQL->updateProjectStatus(trim($out[2]), "working");
+                                    exec($runPrg1[$i] . " > /dev/null &");
+                                }
+                            }
+                            fputs($fp, $runPrg1[$i] . chr(10));
+                            fputs($logStart, $runPrg1[$i] . chr(10));
+                        }
+                    }
+
+                    if (count($runPrg2) > 0) {
+                        for ($i=0; $i < count($runPrg2); $i++) {
+                            $out = explode(" ", $runPrg2[$i]);
+                            $projectStatus = $SQL->getProjectStatus(trim($out[2]));
+                            if ($projectStatus['status'] != 'working') {
+                                if ($projectStatus['last_update'] < $fileTime) {
+                                    $SQL->updateProjectStatus(trim($out[2]), "working");
+                                    exec($runPrg2[$i] . " > /dev/null &");
+                                }
+                            }
+                            fputs($fp, $runPrg2[$i] . chr(10));
+                            fputs($logStart, $runPrg2[$i] . chr(10));
+                        }
+                    }
+
+                    if (count($runPrg3) > 0) {
+                        for ($i=0; $i < count($runPrg3); $i++) {
+                            $out = explode(" ", $runPrg3[$i]);
+                            $projectStatus = $SQL->getProjectStatus(trim($out[2]));
+                            if ($projectStatus['status'] != 'working') {
+                                if ($projectStatus['last_update'] < $fileTime) {
+                                    $SQL->updateProjectStatus(trim($out[2]), "working");
+                                    exec($runPrg3[$i] . " > /dev/null &");
+                                }
+                            }
+                            fputs($fp, $runPrg3[$i] . chr(10));
+                            fputs($logStart, $runPrg3[$i] . chr(10));
+                        }
+                    }
+
+                    fclose($fp);
+
+                    $updateSchedule = fopen("log/run/server/server::" . $arrID, "w+");
+                    fwrite($updateSchedule, "work");
+                    fclose($updateSchedule);
+
+                    @mkdir("log/server/" . $arrID ."/");
+
+                    copy('log/' . $arrID . ".log", 'log/run/' . $arrID . ".log");
+                }
+
 
                 fclose($logStart);
             }
